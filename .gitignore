@@ -1,0 +1,12 @@
+# Python相关
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+*.egg-info/
+
+# 大文件
+data/
+*.h5
