@@ -31,10 +31,15 @@ class CCGCN_TwoStage(nn.Module):
         )
         
         # 简单的融合 (预训练阶段用)
-        self.pretrain_fusion = nn.Linear(self.hidden_dim * 2, self.hidden_dim)
+        # self.pretrain_fusion = nn.Linear(self.hidden_dim * 2, self.hidden_dim)
+        self.feature_fusion = nn.Sequential(
+            nn.Linear(self.hidden_dim * 2, 128),
+            nn.ReLU(),
+            nn.Linear(128, self.z_dim) # 降到 64
+        )
         
         # 解码器 (预训练和训练阶段共享)
-        self.decoder = SimpleDecoder(self.hidden_dim, self.input_dim)
+        self.decoder = SimpleDecoder(self.z_dim, self.input_dim)
         
         # === 训练阶段组件 ===
         self.moe_graph_fusion = AdaptiveMoEGraphFusion(
@@ -42,27 +47,27 @@ class CCGCN_TwoStage(nn.Module):
         )
         # === 关键修改1: 视图特定投影头 (用于对比学习) ===
         self.view_projection = nn.Sequential(
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim*2),
             nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim*2, self.hidden_dim*2),
         )
         
         # === 关键修改2: 融合表征投影头 (用于对比学习) ===
         self.common_projection = nn.Sequential(
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.z_dim, self.hidden_dim*2),
             nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim*2, self.hidden_dim*2),
         )
         # 投影头 (原spCLUE保留)
         self.projectInsHead = nn.Sequential(
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim*2, self.hidden_dim*2),
             nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim*2, self.hidden_dim*2),
             nn.ReLU(),
         )
         
         self.projectClsHead = nn.Sequential(
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.z_dim, self.hidden_dim),
             nn.ReLU(),
             nn.Linear(self.hidden_dim, n_clusters),
             nn.Softmax(dim=1),
@@ -80,12 +85,14 @@ class CCGCN_TwoStage(nn.Module):
             z_pretrain: 融合嵌入
         """
         # 在两个图上编码
-        z1 = self.shared_encoder(data, adj1, 'spatial', self.graph_corr, self.training)
-        z2 = self.shared_encoder(data, adj2, 'expr', self.graph_corr, self.training)
+        z1 = self.shared_encoder(data, adj1, 'spatial', self.graph_corr,self.dropout, False)
+        z2 = self.shared_encoder(data, adj2, 'expr', self.graph_corr,self.dropout, False)
         
         # 简单融合 (可选: 用Attention或直接Concat)
         z_concat = torch.cat([z1, z2], dim=1)
-        z_pretrain = self.act(self.pretrain_fusion(z_concat))
+        z_pretrain = self.feature_fusion(z_concat)
+        # z_pretrain = z_concat
+        # z_pretrain = self.act(self.pretrain_fusion(z_concat))
         
         # 重构
         x_rec = self.decoder(z_pretrain)
@@ -109,13 +116,21 @@ class CCGCN_TwoStage(nn.Module):
         # === Step 1: 用预训练编码器获取Z1, Z2 ===
         if freeze_encoder:
             with torch.no_grad():
-                z1 = self.shared_encoder(data, adj1, 'spatial', 0, False)  # no dropout
-                z2 = self.shared_encoder(data, adj2, 'expr', 0, False)
+                z1 = self.shared_encoder(data, adj1, 'spatial', 0,0, False)  # no dropout
+                z2 = self.shared_encoder(data, adj2, 'expr', 0,0, False)
         else:
-            z1 = self.shared_encoder(data, adj1, 'spatial', self.graph_corr, True)
-            z2 = self.shared_encoder(data, adj2, 'expr', self.graph_corr, True)
+            # z1 = self.shared_encoder(data, adj1, 'spatial', self.graph_corr, False)
+            # z2 = self.shared_encoder(data, adj2, 'expr', self.graph_corr, False)
+            z1 = self.shared_encoder(data, adj1, 'spatial', 0,0.1, False)  
+            z2 = self.shared_encoder(data, adj2, 'expr', 0,0.1, False)
 
         
+        # 1. 投影单视图特征
+        h1 = F.normalize(self.view_projection(z1), p=2, dim=1)
+        h2 = F.normalize(self.view_projection(z2), p=2, dim=1)
+
+        # z1 = F.normalize(z1, p=2, dim=1)
+        # z2 = F.normalize(z2, p=2, dim=1)
         
         # === Step 2: 拼接Z1和Z2 ===
         z_concat = torch.cat([z1, z2], dim=1)  # [N, 2*hidden_dim]
@@ -140,18 +155,18 @@ class CCGCN_TwoStage(nn.Module):
             use_residual=self.use_residual, 
             residual_weight=self.residual_weight
         )
-        
+        z_final = self.feature_fusion(z_final)  # 降维
         # 降维到hidden_dim (因为z_concat是2*hidden_dim)
-        z_final = self.pretrain_fusion(z_final)
+        # z_final = self.pretrain_fusion(z_final)
         # Step 6: 融合表征投影 (用于对比学习)
-        # h_common_proj = F.normalize(self.common_projection(z_final), p=2, dim=1)
+        h_common_proj = F.normalize(self.common_projection(z_final), p=2, dim=1)
         z_final = F.normalize(z_final, p=2, dim=1)
         
         # === Step 5: 重构 ===
         x_rec = self.decoder(z_final)
         
-        return z1, z2, z_final, x_rec, Gf_sparse, gate_weights
-        # return h1_proj, h2_proj, h_common_proj, z_final, x_rec, Gf_sparse, gate_weights
+        # return z1, z2, z_final, x_rec, Gf_sparse, gate_weights
+        return h1, h2, h_common_proj, z_final, x_rec, Gf_sparse, gate_weights
     # def finetune_forward(self, data, adj1, adj2, freeze_encoder=True):
     #     """训练阶段 (修正版)"""
     #     # === Step 1: 编码 ===

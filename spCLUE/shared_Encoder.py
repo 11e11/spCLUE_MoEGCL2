@@ -32,7 +32,7 @@ class SharedGCNEncoder(nn.Module):
     
     def __init__(self, input_dim, hidden_dim, dropout=0.5, view_specific_norm=True):
         super().__init__()
-        self.noiseLayer = NoiseLayer(dropout=dropout)
+        # self.noiseLayer = NoiseLayer(dropout=dropout)
         self.transform = TransForm_W(input_dim, hidden_dim, dropout)
         self.act = nn.ELU()
         
@@ -42,7 +42,7 @@ class SharedGCNEncoder(nn.Module):
             self.bn_spatial = nn.BatchNorm1d(hidden_dim)
             self.bn_expr = nn.BatchNorm1d(hidden_dim)
     
-    def forward(self, data, adj, view_type=None, graph_corr=0.4, training=True):
+    def forward(self, data, adj, view_type=None, graph_corr=0.4,dropout=0.1, training=True):
         """
         Args:
             data: [N, input_dim]
@@ -50,6 +50,7 @@ class SharedGCNEncoder(nn.Module):
             view_type: 'spatial' or 'expr' (用于视图特定归一化)
             graph_corr: edge dropout probability
         """
+        self.noiseLayer = NoiseLayer(dropout=dropout)
         feature = self.noiseLayer(data)
         
         # GCN with edge dropout

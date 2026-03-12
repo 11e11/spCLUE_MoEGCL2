@@ -4,70 +4,179 @@ import math
 import torch.nn.functional as F
 
 
-class StructureGuidedContrastiveLoss(nn.Module):
-    """
-    结构引导的对比学习 (基于MoEGCL)
-    正样本: 融合图中的邻居
-    负样本: 融合图中的非邻居
-    """
+# class StructureGuidedContrastiveLoss(nn.Module):
+#     """
+#     结构引导的对比学习 (基于MoEGCL)
+#     正样本: 融合图中的邻居
+#     负样本: 融合图中的非邻居
+#     """
     
-    def __init__(self, temperature=0.2, device='cuda'):
+#     def __init__(self, temperature=0.2, device='cuda'):
+#         super().__init__()
+#         self.temperature = temperature
+#         self.device = device
+#         self.criterion = nn.CrossEntropyLoss(reduction="sum")
+    
+#     def forward(self, z_view, z_fused, Gf_sparse, eps=1e-8):
+#         """
+#         Args:
+#             z_view: [N, D] 视图特定编码 (Z1 or Z2)
+#             z_fused: [N, D] 融合编码
+#             Gf_sparse: 融合图 (用于定义正负样本)
+        
+#         Returns:
+#             loss: scalar
+#         """
+#         N = z_view.size(0)
+        
+#         # 归一化
+#         # z_view = F.normalize(z_view, p=2, dim=1)
+#         # z_fused = F.normalize(z_fused, p=2, dim=1)
+        
+#         # 计算相似度矩阵
+#         sim_matrix = torch.matmul(z_view, z_fused.T) / self.temperature  # [N, N]
+        
+#         # 从融合图中提取邻居关系
+#         Gf_dense = Gf_sparse.to_dense()  # [N, N]
+        
+#         # 正样本: 同一节点 (对角线)
+#         positive_mask = torch.eye(N).to(self.device)
+        
+#         # 增强正样本: 融合图中的邻居也视为正样本
+#         # 注意: 这里可以调整,只用对角线也可以
+#         positive_mask = positive_mask + Gf_dense
+#         positive_mask = (positive_mask > 0).float()
+#         positive_mask.fill_diagonal_(1)  # 确保对角线为1
+        
+#         # 负样本: 所有非正样本
+#         negative_mask = 1 - positive_mask
+        
+#         # 提取正样本得分
+#         positive_scores = (sim_matrix * positive_mask).sum(dim=1, keepdim=True) / \
+#                          (positive_mask.sum(dim=1, keepdim=True) + eps)
+        
+#         # 提取负样本得分
+#         negative_scores = sim_matrix * negative_mask
+        
+#         # 构建logits (正样本在第一列)
+#         logits = torch.cat([positive_scores, negative_scores], dim=1)
+        
+#         # 标签: 正样本是第0类
+#         labels = torch.zeros(N).to(self.device).long()
+        
+#         # InfoNCE损失
+#         loss = self.criterion(logits, labels) / N
+        
+#         return loss
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class StructureGuidedContrastiveLoss(nn.Module):
+    def __init__(self, temperature=1.0, device='cuda'):
         super().__init__()
         self.temperature = temperature
         self.device = device
-        self.criterion = nn.CrossEntropyLoss(reduction="sum")
-    
-    def forward(self, z_view, z_fused, Gf_sparse, eps=1e-8):
+
+    def forward(self, h_view, h_common, Gf_dense):
         """
-        Args:
-            z_view: [N, D] 视图特定编码 (Z1 or Z2)
-            z_fused: [N, D] 融合编码
-            Gf_sparse: 融合图 (用于定义正负样本)
-        
-        Returns:
-            loss: scalar
+        优化后的显存友好版
         """
-        N = z_view.size(0)
+        N = h_view.size(0)
         
-        # 归一化
-        z_view = F.normalize(z_view, p=2, dim=1)
-        z_fused = F.normalize(z_fused, p=2, dim=1)
+        # 1. 拼接特征并计算相似度矩阵 (2N x 2N)
+        # 这是避不开的 O(N^2)，但我们要尽量减少它的副本
+        h = torch.cat((h_view, h_common), dim=0)  # [2N, D]
+        sim = torch.matmul(h, h.T) / self.temperature  # [2N, 2N]
         
-        # 计算相似度矩阵
-        sim_matrix = torch.matmul(z_view, z_fused.T) / self.temperature  # [N, N]
+        # 2. 构造结构引导的惩罚 (Structural Penalty)
+        # 不要使用 repeat(2,2) 或 ones - S_1，那会创建巨大的新矩阵
+        # 直接利用 Gf_dense [N, N] 的四块拼接逻辑进行原地操作或掩码
         
-        # 从融合图中提取邻居关系
-        Gf_dense = Gf_sparse.to_dense()  # [N, N]
+        # 我们要排除：
+        # (a) 对角线 (self-similarity)
+        # (b) 正样本对 (h_view[i] vs h_common[i])
+        # (c) 图结构中的邻居 (Structural Neighbors)
         
-        # 正样本: 同一节点 (对角线)
-        positive_mask = torch.eye(N).to(self.device)
+        # 构造一个极小值掩码，将不需要作为负样本的位置设为 -1e9
+        # 这样在计算 Softmax (CrossEntropy) 时这些位置的贡献几乎为 0
+        mask_inf = torch.zeros(2 * N, 2 * N, device=self.device)
         
-        # 增强正样本: 融合图中的邻居也视为正样本
-        # 注意: 这里可以调整,只用对角线也可以
-        positive_mask = positive_mask + Gf_dense
-        positive_mask = (positive_mask > 0).float()
-        positive_mask.fill_diagonal_(1)  # 确保对角线为1
+        # 处理 (c) 邻居节点：利用广播直接填充 4 个象限
+        # 假设 Gf_dense 中 1 表示邻居
+        neighbor_mask = Gf_dense > 0
+        mask_inf[:N, :N][neighbor_mask] = -1e9
+        mask_inf[N:, N:][neighbor_mask] = -1e9
+        mask_inf[:N, N:][neighbor_mask] = -1e9
+        mask_inf[N:, :N][neighbor_mask] = -1e9
         
-        # 负样本: 所有非正样本
-        negative_mask = 1 - positive_mask
+        # 处理 (a) & (b) 对角线和正样本对
+        diag_mask = torch.eye(N, device=self.device).bool()
+        # 排除同视图对角线
+        mask_inf[:N, :N][diag_mask] = -1e9
+        mask_inf[N:, N:][diag_mask] = -1e9
+        # 排除跨视图正样本（这些我们要单独提取，不作为负样本）
+        mask_inf[:N, N:][diag_mask] = -1e9
+        mask_inf[N:, :N][diag_mask] = -1e9
         
-        # 提取正样本得分
-        positive_scores = (sim_matrix * positive_mask).sum(dim=1, keepdim=True) / \
-                         (positive_mask.sum(dim=1, keepdim=True) + eps)
+        # 将掩码应用到相似度矩阵
+        sim_with_mask = sim + mask_inf
         
-        # 提取负样本得分
-        negative_scores = sim_matrix * negative_mask
+        # 3. 提取正样本 (2N, 1)
+        # sim[:N, N:] 的对角线是 h_view[i] vs h_common[i]
+        pos_i_j = torch.diag(sim[:N, N:]) 
+        pos_j_i = torch.diag(sim[N:, :N])
+        positives = torch.cat([pos_i_j, pos_j_i], dim=0).view(2 * N, 1)
         
-        # 构建logits (正样本在第一列)
-        logits = torch.cat([positive_scores, negative_scores], dim=1)
+        # 4. 提取负样本 (2N, 2N-2-neighbors)
+        # 关键优化：不再使用 sim[mask].reshape，因为那样会产生不规则形状，显存开销极大
+        # 我们改用 LogSumExp 的逻辑来手动计算 InfoNCE
         
-        # 标签: 正样本是第0类
-        labels = torch.zeros(N).to(self.device).long()
+        # 计算分母：sum(exp(pos) + sum(exp(neg)))
+        # 为了数值稳定，使用如下公式：
+        # Loss = -pos + log(sum(exp(all_sim_in_row)))
         
-        # InfoNCE损失
-        loss = self.criterion(logits, labels) / N
+        logits_max, _ = torch.max(sim_with_mask, dim=1, keepdim=True)
+        # 减去最大值防止溢出
+        exp_sim = torch.exp(sim_with_mask - logits_max)
+        sum_exp_neg = exp_sim.sum(dim=1, keepdim=True)
         
-        return loss
+        # 加上正样本的 exp
+        exp_pos = torch.exp(positives - logits_max)
+        
+        # InfoNCE = -log( exp(pos) / (exp(pos) + sum(exp(neg))) )
+        loss = - (positives - logits_max) + torch.log(exp_pos + sum_exp_neg)
+        
+        return loss.mean()
+        # h = torch.cat((h_view, h_common), dim=0)
+        # sim = torch.matmul(h, h.T) / self.temperature
+
+        # exp_sim = torch.exp(sim)
+
+        # pos_mask = torch.zeros(2*N, 2*N, device=self.device)
+
+        # diag = torch.eye(N, device=self.device).bool()
+        # pos_mask[:N, N:][diag] = 1
+        # pos_mask[N:, :N][diag] = 1
+
+        # neighbor_mask = (Gf_dense > 0)
+
+        # pos_mask[:N, :N][neighbor_mask] = 1
+        # pos_mask[N:, N:][neighbor_mask] = 1
+        # pos_mask[:N, N:][neighbor_mask] = 1
+        # pos_mask[N:, :N][neighbor_mask] = 1
+
+        # self_mask = torch.eye(2*N, device=self.device).bool()
+        # pos_mask[self_mask] = 0
+
+        # pos_sum = (exp_sim * pos_mask).sum(dim=1)
+
+        # den_mask = ~self_mask
+        # den_sum = (exp_sim * den_mask).sum(dim=1)
+
+        # loss = -torch.log(pos_sum / den_sum)
+
+        # return loss.mean()
 
 class ContrastiveLoss(nn.Module):
     def __init__(self, temperature=0.2) -> None:

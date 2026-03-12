@@ -14,7 +14,7 @@ class MoEGraphGating(nn.Module):
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim, 64),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Dropout(dropout),
             nn.Linear(64, 2),
             nn.Softmax(dim=1)
@@ -28,6 +28,41 @@ class MoEGraphGating(nn.Module):
             gate_weights: [N, 2]
         """
         return self.gate_net(z_concat)
+# class MoEGraphGating(nn.Module):
+#     def __init__(self, feature_dim,
+#                 hidden_dim=128, dropout_rate=0.1):
+#         super().__init__()
+
+#         self.layer1 = nn.Linear(feature_dim, 128)
+#         self.dropout1 = nn.Dropout(dropout_rate)
+
+#         self.layer2 = nn.Linear(128, 256)
+#         self.leaky_relu1 = nn.LeakyReLU()
+#         self.dropout2 = nn.Dropout(dropout_rate)
+
+#         self.layer3 = nn.Linear(256, 128)
+#         self.leaky_relu2 = nn.LeakyReLU()
+#         self.dropout3 = nn.Dropout(dropout_rate)
+
+#         self.layer4 = nn.Linear(128, 2)
+
+        
+
+#     def forward(self, x):
+#         x = torch.relu(self.layer1(x))
+#         x = self.dropout1(x)
+
+#         x = self.layer2(x)
+#         x = self.leaky_relu1(x)
+#         x = self.dropout2(x)
+
+#         x = self.layer3(x)
+#         x = self.leaky_relu2(x)
+#         x = self.dropout3(x)
+
+#         logits = torch.softmax(self.layer4(x), dim=1)
+       
+#         return logits
 
 
 class AdaptiveMoEGraphFusion(nn.Module):
@@ -52,12 +87,14 @@ class AdaptiveMoEGraphFusion(nn.Module):
             gate_weights: [N, 2]
         """
         N = z_concat.size(0)
+        # z_concat = F.layer_norm(z_concat, z_concat.size()[1:])   # LayerNorm有助于稳定训练
         gate_weights = self.gating(z_concat)
         
         # 根据数据规模选择策略
         if N < self.sparse_threshold:
             # 小数据集: 用密集版本 (模仿MoEGCL)
             return self._dense_fusion(gate_weights, G1, G2)
+            # return 0.5*G1+0.5*G2, gate_weights
         else:
             # 大数据集: 用稀疏版本
             return self._sparse_fusion(gate_weights, G1, G2)
@@ -79,6 +116,7 @@ class AdaptiveMoEGraphFusion(nn.Module):
         Gf = torch.sum(A_list * weights, dim=2)  # [N, N]
         
         return Gf, gate_weights
+    
     
     def _sparse_fusion(self, gate_weights, G1_sparse, G2_sparse):
         """稀疏融合 (我们的方式)"""

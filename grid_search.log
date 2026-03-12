@@ -27055,4 +27055,492 @@ Stage 2: Fine-tuning with MoE Graph Fusion
 ✓ Finetune finished (max epochs reached)
   [Gate Stats] spatial=0.591±0.141, expr=0.409±0.141
 fitting ...
-  |                                                                              |                                                                      |   0%
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%
+[2026-03-11 10:45:32] [INFO]   → 151670 ARI: 0.2242
+[2026-03-11 10:45:32] [INFO] Processing 151671 (n_clusters=5)...
+✅ 成功强制加载 libR.so
+R 环境路径: /home/pxy/miniconda3/envs/r40/lib/R
+normalized data ---------------->
+正在构建图: spatial, 使用度量: cosine ...
+  -> 使用空间坐标 (euclidean)
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+spatial graph created successfully <----
+
+正在构建图: expr, 使用度量: euclidean ...
+  -> 使用 PCA 表达特征
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+expr graph created successfully <----
+
+============================================================
+Stage 1: Pre-training Shared Encoder
+============================================================
+Pretrain:   0%|          | 0/100 [00:00<?, ?it/s]  Pretrain Epoch 10: Rec Loss = 10.672887
+Pretrain:  10%|█         | 10/100 [00:00<00:00, 96.42it/s]  Pretrain Epoch 20: Rec Loss = 10.503978
+Pretrain:  21%|██        | 21/100 [00:00<00:00, 99.65it/s]  Pretrain Epoch 30: Rec Loss = 10.328781
+Pretrain:  32%|███▏      | 32/100 [00:00<00:00, 103.14it/s]  Pretrain Epoch 40: Rec Loss = 10.193974
+Pretrain:  44%|████▍     | 44/100 [00:00<00:00, 108.43it/s]  Pretrain Epoch 50: Rec Loss = 10.144704
+Pretrain:  55%|█████▌    | 55/100 [00:00<00:00, 107.33it/s]  Pretrain Epoch 60: Rec Loss = 10.113040
+Pretrain:  66%|██████▌   | 66/100 [00:00<00:00, 105.57it/s]  Pretrain Epoch 70: Rec Loss = 10.075727
+Pretrain:  77%|███████▋  | 77/100 [00:00<00:00, 105.28it/s]  Pretrain Epoch 80: Rec Loss = 10.049547
+Pretrain:  88%|████████▊ | 88/100 [00:00<00:00, 106.05it/s]  Pretrain Epoch 90: Rec Loss = 10.023941
+Pretrain:  99%|█████████▉| 99/100 [00:00<00:00, 106.37it/s]  Pretrain Epoch 100: Rec Loss = 9.998032
+Pretrain: 100%|██████████| 100/100 [00:00<00:00, 105.15it/s]
+✓ Pretrain finished! Final Rec Loss = 9.998032
+
+============================================================
+Stage 2: Fine-tuning with MoE Graph Fusion
+============================================================
+✓ Encoder frozen, only training fusion & projection heads
+✓ Early stopping threshold: ARI >= 0.30
+
+Finetune:   0%|          | 0/100 [00:00<?, ?it/s]Finetune:   1%|          | 1/100 [00:00<00:10,  9.29it/s]Finetune:   2%|▏         | 2/100 [00:00<00:10,  9.15it/s]Finetune:   3%|▎         | 3/100 [00:00<00:10,  8.93it/s]Finetune:   5%|▌         | 5/100 [00:00<00:10,  9.19it/s]Finetune:   6%|▌         | 6/100 [00:00<00:10,  8.95it/s]Finetune:   7%|▋         | 7/100 [00:00<00:10,  8.74it/s]Finetune:   8%|▊         | 8/100 [00:00<00:10,  8.67it/s]Finetune:   9%|▉         | 9/100 [00:01<00:10,  8.63it/s]  Train Epoch 10: Rec Loss = 9.318802, Contrast Loss = 7.943272, Cluster Loss = 0.000000
+Finetune:  11%|█         | 11/100 [00:01<00:09,  9.54it/s]Finetune:  13%|█▎        | 13/100 [00:01<00:08, 10.16it/s]Finetune:  15%|█▌        | 15/100 [00:01<00:08, 10.34it/s]Finetune:  17%|█▋        | 17/100 [00:01<00:08,  9.80it/s]Finetune:  19%|█▉        | 19/100 [00:01<00:07, 10.19it/s]  Train Epoch 20: Rec Loss = 9.190820, Contrast Loss = 7.689570, Cluster Loss = 0.000000
+Finetune:  21%|██        | 21/100 [00:02<00:07, 10.42it/s]Finetune:  23%|██▎       | 23/100 [00:02<00:07, 10.60it/s]Finetune:  25%|██▌       | 25/100 [00:02<00:07, 10.58it/s]Finetune:  27%|██▋       | 27/100 [00:02<00:06, 10.62it/s]Finetune:  29%|██▉       | 29/100 [00:02<00:06, 10.66it/s]  Train Epoch 30: Rec Loss = 9.109842, Contrast Loss = 7.529948, Cluster Loss = 0.000000
+Finetune:  31%|███       | 31/100 [00:03<00:06, 10.75it/s]Finetune:  33%|███▎      | 33/100 [00:03<00:06, 11.16it/s]Finetune:  35%|███▌      | 35/100 [00:03<00:05, 11.40it/s]Finetune:  37%|███▋      | 37/100 [00:03<00:05, 11.18it/s]Finetune:  39%|███▉      | 39/100 [00:03<00:05, 11.33it/s]  Train Epoch 40: Rec Loss = 9.053606, Contrast Loss = 7.420341, Cluster Loss = 0.000000
+Finetune:  41%|████      | 41/100 [00:03<00:04, 12.29it/s]Finetune:  43%|████▎     | 43/100 [00:04<00:04, 12.25it/s]Finetune:  45%|████▌     | 45/100 [00:04<00:04, 12.74it/s]Finetune:  47%|████▋     | 47/100 [00:04<00:04, 13.11it/s]Finetune:  49%|████▉     | 49/100 [00:04<00:04, 12.26it/s]  Train Epoch 50: Rec Loss = 9.008447, Contrast Loss = 7.332773, Cluster Loss = 0.000000
+Finetune:  51%|█████     | 51/100 [00:04<00:04, 11.14it/s]Finetune:  53%|█████▎    | 53/100 [00:04<00:04, 10.62it/s]Finetune:  55%|█████▌    | 55/100 [00:05<00:04, 10.45it/s]Finetune:  57%|█████▋    | 57/100 [00:05<00:04, 10.75it/s]Finetune:  59%|█████▉    | 59/100 [00:05<00:03, 11.58it/s]  Train Epoch 60: Rec Loss = 8.972025, Contrast Loss = 7.262637, Cluster Loss = 0.000000
+Finetune:  61%|██████    | 61/100 [00:05<00:03, 12.40it/s]Finetune:  63%|██████▎   | 63/100 [00:05<00:02, 12.95it/s]Finetune:  65%|██████▌   | 65/100 [00:05<00:02, 13.43it/s]Finetune:  67%|██████▋   | 67/100 [00:06<00:02, 12.65it/s]Finetune:  69%|██████▉   | 69/100 [00:06<00:02, 12.67it/s]  Train Epoch 70: Rec Loss = 8.941137, Contrast Loss = 7.203523, Cluster Loss = 0.000000
+Finetune:  71%|███████   | 71/100 [00:06<00:02, 11.84it/s]Finetune:  73%|███████▎  | 73/100 [00:06<00:02, 11.62it/s]Finetune:  75%|███████▌  | 75/100 [00:06<00:02, 11.11it/s]Finetune:  77%|███████▋  | 77/100 [00:06<00:02, 11.04it/s]Finetune:  79%|███████▉  | 79/100 [00:07<00:01, 11.13it/s]  Train Epoch 80: Rec Loss = 8.910522, Contrast Loss = 7.144549, Cluster Loss = 0.000000
+Finetune:  81%|████████  | 81/100 [00:07<00:01, 10.10it/s]Finetune:  83%|████████▎ | 83/100 [00:07<00:01,  9.50it/s]Finetune:  84%|████████▍ | 84/100 [00:07<00:01,  9.27it/s]Finetune:  85%|████████▌ | 85/100 [00:07<00:01,  9.06it/s]Finetune:  86%|████████▌ | 86/100 [00:07<00:01,  9.00it/s]Finetune:  88%|████████▊ | 88/100 [00:08<00:01,  9.13it/s]Finetune:  89%|████████▉ | 89/100 [00:08<00:01,  8.86it/s]  Train Epoch 90: Rec Loss = 8.885988, Contrast Loss = 7.098188, Cluster Loss = 0.000000
+Finetune:  90%|█████████ | 90/100 [00:08<00:01,  8.77it/s]Finetune:  91%|█████████ | 91/100 [00:08<00:01,  8.67it/s]Finetune:  92%|█████████▏| 92/100 [00:08<00:00,  8.57it/s]Finetune:  94%|█████████▍| 94/100 [00:08<00:00,  9.14it/s]Finetune:  96%|█████████▌| 96/100 [00:09<00:00,  9.89it/s]Finetune:  97%|█████████▋| 97/100 [00:09<00:00,  9.53it/s]Finetune:  98%|█████████▊| 98/100 [00:09<00:00,  9.63it/s]  Train Epoch 100: Rec Loss = 8.863395, Contrast Loss = 7.055194, Cluster Loss = 0.000000
+
+  Finetune Epoch 100:
+    Total Loss   = 8.8634
+    Rec Loss     = 10.6716
+    Contrast Loss= 7.0552
+    Gate: spatial=0.548±0.135, expr=0.452±0.135
+Finetune: 100%|██████████| 100/100 [00:09<00:00,  9.59it/s]Finetune: 100%|██████████| 100/100 [00:09<00:00, 10.53it/s]
+
+✓ Finetune finished (max epochs reached)
+  [Gate Stats] spatial=0.548±0.135, expr=0.452±0.135
+fitting ...
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%
+[2026-03-11 10:47:01] [INFO]   → 151671 ARI: 0.5924
+[2026-03-11 10:47:01] [INFO] Processing 151672 (n_clusters=5)...
+✅ 成功强制加载 libR.so
+R 环境路径: /home/pxy/miniconda3/envs/r40/lib/R
+normalized data ---------------->
+正在构建图: spatial, 使用度量: cosine ...
+  -> 使用空间坐标 (euclidean)
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+spatial graph created successfully <----
+
+正在构建图: expr, 使用度量: euclidean ...
+  -> 使用 PCA 表达特征
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+expr graph created successfully <----
+
+============================================================
+Stage 1: Pre-training Shared Encoder
+============================================================
+Pretrain:   0%|          | 0/100 [00:00<?, ?it/s]  Pretrain Epoch 10: Rec Loss = 10.707473
+Pretrain:  11%|█         | 11/100 [00:00<00:00, 105.70it/s]  Pretrain Epoch 20: Rec Loss = 10.543724
+Pretrain:  22%|██▏       | 22/100 [00:00<00:00, 107.88it/s]  Pretrain Epoch 30: Rec Loss = 10.373306
+Pretrain:  34%|███▍      | 34/100 [00:00<00:00, 111.62it/s]  Pretrain Epoch 40: Rec Loss = 10.248250
+Pretrain:  46%|████▌     | 46/100 [00:00<00:00, 109.99it/s]  Pretrain Epoch 50: Rec Loss = 10.200460
+Pretrain:  58%|█████▊    | 58/100 [00:00<00:00, 105.45it/s]  Pretrain Epoch 60: Rec Loss = 10.169716
+Pretrain:  69%|██████▉   | 69/100 [00:00<00:00, 101.93it/s]  Pretrain Epoch 70: Rec Loss = 10.133871
+  Pretrain Epoch 80: Rec Loss = 10.107213
+Pretrain:  80%|████████  | 80/100 [00:00<00:00, 98.43it/s]   Pretrain Epoch 90: Rec Loss = 10.079374
+Pretrain:  90%|█████████ | 90/100 [00:00<00:00, 97.02it/s]  Pretrain Epoch 100: Rec Loss = 10.052026
+Pretrain: 100%|██████████| 100/100 [00:00<00:00, 96.41it/s]Pretrain: 100%|██████████| 100/100 [00:00<00:00, 101.09it/s]
+✓ Pretrain finished! Final Rec Loss = 10.052026
+
+============================================================
+Stage 2: Fine-tuning with MoE Graph Fusion
+============================================================
+✓ Encoder frozen, only training fusion & projection heads
+✓ Early stopping threshold: ARI >= 0.30
+
+Finetune:   0%|          | 0/100 [00:00<?, ?it/s]Finetune:   1%|          | 1/100 [00:00<00:11,  8.62it/s]Finetune:   3%|▎         | 3/100 [00:00<00:09, 10.58it/s]Finetune:   5%|▌         | 5/100 [00:00<00:09, 10.34it/s]Finetune:   7%|▋         | 7/100 [00:00<00:09,  9.42it/s]Finetune:   8%|▊         | 8/100 [00:00<00:10,  9.16it/s]Finetune:   9%|▉         | 9/100 [00:00<00:10,  9.03it/s]  Train Epoch 10: Rec Loss = 9.307669, Contrast Loss = 7.892071, Cluster Loss = 0.000000
+Finetune:  11%|█         | 11/100 [00:01<00:09,  9.16it/s]Finetune:  12%|█▏        | 12/100 [00:01<00:10,  8.70it/s]Finetune:  13%|█▎        | 13/100 [00:01<00:10,  8.33it/s]Finetune:  14%|█▍        | 14/100 [00:01<00:10,  8.25it/s]Finetune:  15%|█▌        | 15/100 [00:01<00:10,  8.50it/s]Finetune:  16%|█▌        | 16/100 [00:01<00:09,  8.58it/s]Finetune:  17%|█▋        | 17/100 [00:01<00:09,  8.58it/s]Finetune:  19%|█▉        | 19/100 [00:02<00:08,  9.33it/s]  Train Epoch 20: Rec Loss = 9.180556, Contrast Loss = 7.639823, Cluster Loss = 0.000000
+Finetune:  20%|██        | 20/100 [00:02<00:08,  9.45it/s]Finetune:  21%|██        | 21/100 [00:02<00:08,  9.57it/s]Finetune:  22%|██▏       | 22/100 [00:02<00:08,  9.55it/s]Finetune:  24%|██▍       | 24/100 [00:02<00:07,  9.93it/s]Finetune:  25%|██▌       | 25/100 [00:02<00:07,  9.87it/s]Finetune:  27%|██▋       | 27/100 [00:02<00:07, 10.09it/s]Finetune:  29%|██▉       | 29/100 [00:03<00:07, 10.11it/s]  Train Epoch 30: Rec Loss = 9.103879, Contrast Loss = 7.488854, Cluster Loss = 0.000000
+Finetune:  31%|███       | 31/100 [00:03<00:06, 10.02it/s]Finetune:  32%|███▏      | 32/100 [00:03<00:06,  9.98it/s]Finetune:  33%|███▎      | 33/100 [00:03<00:06,  9.87it/s]Finetune:  34%|███▍      | 34/100 [00:03<00:06,  9.63it/s]Finetune:  35%|███▌      | 35/100 [00:03<00:06,  9.45it/s]Finetune:  36%|███▌      | 36/100 [00:03<00:06,  9.34it/s]Finetune:  37%|███▋      | 37/100 [00:03<00:06,  9.10it/s]Finetune:  38%|███▊      | 38/100 [00:04<00:06,  9.08it/s]Finetune:  39%|███▉      | 39/100 [00:04<00:06,  8.93it/s]  Train Epoch 40: Rec Loss = 9.053167, Contrast Loss = 7.390099, Cluster Loss = 0.000000
+Finetune:  40%|████      | 40/100 [00:04<00:06,  8.97it/s]Finetune:  41%|████      | 41/100 [00:04<00:06,  8.94it/s]Finetune:  43%|████▎     | 43/100 [00:04<00:05,  9.53it/s]Finetune:  44%|████▍     | 44/100 [00:04<00:05,  9.56it/s]Finetune:  45%|████▌     | 45/100 [00:04<00:05,  9.61it/s]Finetune:  46%|████▌     | 46/100 [00:04<00:05,  9.61it/s]Finetune:  48%|████▊     | 48/100 [00:05<00:05,  9.85it/s]Finetune:  49%|████▉     | 49/100 [00:05<00:05,  9.58it/s]  Train Epoch 50: Rec Loss = 9.013350, Contrast Loss = 7.313174, Cluster Loss = 0.000000
+Finetune:  51%|█████     | 51/100 [00:05<00:04, 10.28it/s]Finetune:  53%|█████▎    | 53/100 [00:05<00:04, 10.73it/s]Finetune:  55%|█████▌    | 55/100 [00:05<00:04, 10.96it/s]Finetune:  57%|█████▋    | 57/100 [00:05<00:04, 10.73it/s]Finetune:  59%|█████▉    | 59/100 [00:06<00:03, 10.60it/s]  Train Epoch 60: Rec Loss = 8.981932, Contrast Loss = 7.253459, Cluster Loss = 0.000000
+Finetune:  61%|██████    | 61/100 [00:06<00:03, 10.45it/s]Finetune:  63%|██████▎   | 63/100 [00:06<00:03,  9.83it/s]Finetune:  64%|██████▍   | 64/100 [00:06<00:03,  9.74it/s]Finetune:  65%|██████▌   | 65/100 [00:06<00:03,  9.71it/s]Finetune:  66%|██████▌   | 66/100 [00:06<00:03,  9.46it/s]Finetune:  67%|██████▋   | 67/100 [00:06<00:03,  9.56it/s]Finetune:  69%|██████▉   | 69/100 [00:07<00:03,  9.89it/s]  Train Epoch 70: Rec Loss = 8.955479, Contrast Loss = 7.203696, Cluster Loss = 0.000000
+Finetune:  71%|███████   | 71/100 [00:07<00:02, 10.43it/s]Finetune:  73%|███████▎  | 73/100 [00:07<00:02, 10.37it/s]Finetune:  75%|███████▌  | 75/100 [00:07<00:02,  9.88it/s]Finetune:  77%|███████▋  | 77/100 [00:07<00:02, 10.39it/s]Finetune:  79%|███████▉  | 79/100 [00:08<00:01, 10.85it/s]  Train Epoch 80: Rec Loss = 8.930462, Contrast Loss = 7.156203, Cluster Loss = 0.000000
+Finetune:  81%|████████  | 81/100 [00:08<00:01, 11.23it/s]Finetune:  83%|████████▎ | 83/100 [00:08<00:01, 11.70it/s]Finetune:  85%|████████▌ | 85/100 [00:08<00:01, 10.74it/s]Finetune:  87%|████████▋ | 87/100 [00:08<00:01, 10.62it/s]Finetune:  89%|████████▉ | 89/100 [00:09<00:01, 10.60it/s]  Train Epoch 90: Rec Loss = 8.910913, Contrast Loss = 7.120658, Cluster Loss = 0.000000
+Finetune:  91%|█████████ | 91/100 [00:09<00:00, 11.19it/s]Finetune:  93%|█████████▎| 93/100 [00:09<00:00, 10.05it/s]Finetune:  95%|█████████▌| 95/100 [00:09<00:00, 10.12it/s]Finetune:  97%|█████████▋| 97/100 [00:09<00:00,  9.70it/s]Finetune:  98%|█████████▊| 98/100 [00:09<00:00,  9.46it/s]Finetune:  99%|█████████▉| 99/100 [00:10<00:00,  9.26it/s]  Train Epoch 100: Rec Loss = 8.891758, Contrast Loss = 7.085618, Cluster Loss = 0.000000
+
+  Finetune Epoch 100:
+    Total Loss   = 8.8918
+    Rec Loss     = 10.6979
+    Contrast Loss= 7.0856
+    Gate: spatial=0.554±0.137, expr=0.446±0.137
+Finetune: 100%|██████████| 100/100 [00:10<00:00,  8.92it/s]Finetune: 100%|██████████| 100/100 [00:10<00:00,  9.80it/s]
+
+✓ Finetune finished (max epochs reached)
+  [Gate Stats] spatial=0.554±0.137, expr=0.446±0.137
+fitting ...
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%
+[2026-03-11 10:48:27] [INFO]   → 151672 ARI: 0.7470
+[2026-03-11 10:48:27] [INFO] Processing 151673 (n_clusters=7)...
+✅ 成功强制加载 libR.so
+R 环境路径: /home/pxy/miniconda3/envs/r40/lib/R
+normalized data ---------------->
+正在构建图: spatial, 使用度量: cosine ...
+  -> 使用空间坐标 (euclidean)
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+spatial graph created successfully <----
+
+正在构建图: expr, 使用度量: euclidean ...
+  -> 使用 PCA 表达特征
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+expr graph created successfully <----
+
+============================================================
+Stage 1: Pre-training Shared Encoder
+============================================================
+Pretrain:   0%|          | 0/100 [00:00<?, ?it/s]  Pretrain Epoch 10: Rec Loss = 12.224307
+Pretrain:  11%|█         | 11/100 [00:00<00:00, 107.72it/s]  Pretrain Epoch 20: Rec Loss = 12.027517
+Pretrain:  22%|██▏       | 22/100 [00:00<00:00, 107.98it/s]  Pretrain Epoch 30: Rec Loss = 11.809577
+Pretrain:  33%|███▎      | 33/100 [00:00<00:00, 107.40it/s]  Pretrain Epoch 40: Rec Loss = 11.620001
+Pretrain:  44%|████▍     | 44/100 [00:00<00:00, 106.69it/s]  Pretrain Epoch 50: Rec Loss = 11.527953
+Pretrain:  55%|█████▌    | 55/100 [00:00<00:00, 107.74it/s]  Pretrain Epoch 60: Rec Loss = 11.480644
+Pretrain:  66%|██████▌   | 66/100 [00:00<00:00, 107.75it/s]  Pretrain Epoch 70: Rec Loss = 11.443057
+Pretrain:  77%|███████▋  | 77/100 [00:00<00:00, 104.35it/s]  Pretrain Epoch 80: Rec Loss = 11.414133
+Pretrain:  88%|████████▊ | 88/100 [00:00<00:00, 101.32it/s]  Pretrain Epoch 90: Rec Loss = 11.386222
+Pretrain:  99%|█████████▉| 99/100 [00:00<00:00, 99.07it/s]   Pretrain Epoch 100: Rec Loss = 11.356149
+Pretrain: 100%|██████████| 100/100 [00:00<00:00, 102.92it/s]
+✓ Pretrain finished! Final Rec Loss = 11.356149
+
+============================================================
+Stage 2: Fine-tuning with MoE Graph Fusion
+============================================================
+✓ Encoder frozen, only training fusion & projection heads
+✓ Early stopping threshold: ARI >= 0.30
+
+Finetune:   0%|          | 0/100 [00:00<?, ?it/s]Finetune:   2%|▏         | 2/100 [00:00<00:09,  9.94it/s]Finetune:   3%|▎         | 3/100 [00:00<00:10,  9.58it/s]Finetune:   5%|▌         | 5/100 [00:00<00:09, 10.16it/s]Finetune:   7%|▋         | 7/100 [00:00<00:08, 10.66it/s]Finetune:   9%|▉         | 9/100 [00:00<00:08, 10.23it/s]  Train Epoch 10: Rec Loss = 10.055651, Contrast Loss = 7.851649, Cluster Loss = 0.000000
+Finetune:  11%|█         | 11/100 [00:01<00:08, 10.89it/s]Finetune:  13%|█▎        | 13/100 [00:01<00:07, 11.00it/s]Finetune:  15%|█▌        | 15/100 [00:01<00:07, 11.74it/s]Finetune:  17%|█▋        | 17/100 [00:01<00:06, 12.39it/s]Finetune:  19%|█▉        | 19/100 [00:01<00:06, 12.70it/s]  Train Epoch 20: Rec Loss = 9.893300, Contrast Loss = 7.531212, Cluster Loss = 0.000000
+Finetune:  21%|██        | 21/100 [00:01<00:06, 12.31it/s]Finetune:  23%|██▎       | 23/100 [00:02<00:06, 11.40it/s]Finetune:  25%|██▌       | 25/100 [00:02<00:07, 10.62it/s]Finetune:  27%|██▋       | 27/100 [00:02<00:06, 10.97it/s]Finetune:  29%|██▉       | 29/100 [00:02<00:06, 10.66it/s]  Train Epoch 30: Rec Loss = 9.787725, Contrast Loss = 7.323387, Cluster Loss = 0.000000
+Finetune:  31%|███       | 31/100 [00:02<00:06, 11.07it/s]Finetune:  33%|███▎      | 33/100 [00:03<00:06, 10.47it/s]Finetune:  35%|███▌      | 35/100 [00:03<00:06, 10.39it/s]Finetune:  37%|███▋      | 37/100 [00:03<00:06, 10.23it/s]Finetune:  39%|███▉      | 39/100 [00:03<00:05, 10.45it/s]  Train Epoch 40: Rec Loss = 9.712262, Contrast Loss = 7.175894, Cluster Loss = 0.000000
+Finetune:  41%|████      | 41/100 [00:03<00:05, 10.59it/s]Finetune:  43%|████▎     | 43/100 [00:03<00:05, 10.89it/s]Finetune:  45%|████▌     | 45/100 [00:04<00:05, 10.79it/s]Finetune:  47%|████▋     | 47/100 [00:04<00:04, 11.02it/s]Finetune:  49%|████▉     | 49/100 [00:04<00:04, 11.17it/s]  Train Epoch 50: Rec Loss = 9.659060, Contrast Loss = 7.072971, Cluster Loss = 0.000000
+Finetune:  51%|█████     | 51/100 [00:04<00:04, 11.27it/s]Finetune:  53%|█████▎    | 53/100 [00:04<00:04, 11.18it/s]Finetune:  55%|█████▌    | 55/100 [00:05<00:04, 10.70it/s]Finetune:  57%|█████▋    | 57/100 [00:05<00:03, 10.86it/s]Finetune:  59%|█████▉    | 59/100 [00:05<00:03, 11.15it/s]  Train Epoch 60: Rec Loss = 9.612186, Contrast Loss = 6.983006, Cluster Loss = 0.000000
+Finetune:  61%|██████    | 61/100 [00:05<00:03, 10.15it/s]Finetune:  63%|██████▎   | 63/100 [00:05<00:04,  9.10it/s]Finetune:  64%|██████▍   | 64/100 [00:06<00:04,  8.64it/s]Finetune:  65%|██████▌   | 65/100 [00:06<00:04,  8.60it/s]Finetune:  66%|██████▌   | 66/100 [00:06<00:03,  8.60it/s]Finetune:  67%|██████▋   | 67/100 [00:06<00:04,  8.22it/s]Finetune:  68%|██████▊   | 68/100 [00:06<00:03,  8.00it/s]Finetune:  69%|██████▉   | 69/100 [00:06<00:03,  8.17it/s]  Train Epoch 70: Rec Loss = 9.573247, Contrast Loss = 6.909015, Cluster Loss = 0.000000
+Finetune:  70%|███████   | 70/100 [00:06<00:03,  8.34it/s]Finetune:  72%|███████▏  | 72/100 [00:06<00:03,  9.00it/s]Finetune:  74%|███████▍  | 74/100 [00:07<00:02,  9.63it/s]Finetune:  75%|███████▌  | 75/100 [00:07<00:02,  9.59it/s]Finetune:  76%|███████▌  | 76/100 [00:07<00:02,  9.39it/s]Finetune:  77%|███████▋  | 77/100 [00:07<00:02,  9.23it/s]Finetune:  78%|███████▊  | 78/100 [00:07<00:02,  9.08it/s]  Train Epoch 80: Rec Loss = 9.540915, Contrast Loss = 6.848250, Cluster Loss = 0.000000
+Finetune:  80%|████████  | 80/100 [00:07<00:02,  9.73it/s]Finetune:  82%|████████▏ | 82/100 [00:07<00:01, 10.40it/s]Finetune:  84%|████████▍ | 84/100 [00:08<00:01, 10.95it/s]Finetune:  86%|████████▌ | 86/100 [00:08<00:01, 11.23it/s]Finetune:  88%|████████▊ | 88/100 [00:08<00:01, 11.06it/s]  Train Epoch 90: Rec Loss = 9.511230, Contrast Loss = 6.792679, Cluster Loss = 0.000000
+Finetune:  90%|█████████ | 90/100 [00:08<00:00, 10.77it/s]Finetune:  92%|█████████▏| 92/100 [00:08<00:00, 10.88it/s]Finetune:  94%|█████████▍| 94/100 [00:09<00:00, 10.20it/s]Finetune:  96%|█████████▌| 96/100 [00:09<00:00,  9.84it/s]Finetune:  98%|█████████▊| 98/100 [00:09<00:00, 10.23it/s]  Train Epoch 100: Rec Loss = 9.487631, Contrast Loss = 6.749155, Cluster Loss = 0.000000
+
+  Finetune Epoch 100:
+    Total Loss   = 9.4876
+    Rec Loss     = 12.2261
+    Contrast Loss= 6.7492
+    Gate: spatial=0.535±0.157, expr=0.465±0.157
+Finetune: 100%|██████████| 100/100 [00:09<00:00, 10.52it/s]Finetune: 100%|██████████| 100/100 [00:09<00:00, 10.36it/s]
+
+✓ Finetune finished (max epochs reached)
+  [Gate Stats] spatial=0.535±0.157, expr=0.465±0.157
+fitting ...
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%
+[2026-03-11 10:49:46] [INFO]   → 151673 ARI: 0.5594
+[2026-03-11 10:49:46] [INFO] Processing 151674 (n_clusters=7)...
+✅ 成功强制加载 libR.so
+R 环境路径: /home/pxy/miniconda3/envs/r40/lib/R
+normalized data ---------------->
+正在构建图: spatial, 使用度量: cosine ...
+  -> 使用空间坐标 (euclidean)
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+spatial graph created successfully <----
+
+正在构建图: expr, 使用度量: euclidean ...
+  -> 使用 PCA 表达特征
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+expr graph created successfully <----
+
+============================================================
+Stage 1: Pre-training Shared Encoder
+============================================================
+Pretrain:   0%|          | 0/100 [00:00<?, ?it/s]  Pretrain Epoch 10: Rec Loss = 12.351042
+Pretrain:  13%|█▎        | 13/100 [00:00<00:00, 129.29it/s]  Pretrain Epoch 20: Rec Loss = 12.166121
+Pretrain:  27%|██▋       | 27/100 [00:00<00:00, 131.42it/s]  Pretrain Epoch 30: Rec Loss = 11.966734
+  Pretrain Epoch 40: Rec Loss = 11.795767
+Pretrain:  42%|████▏     | 42/100 [00:00<00:00, 135.96it/s]  Pretrain Epoch 50: Rec Loss = 11.692981
+Pretrain:  56%|█████▌    | 56/100 [00:00<00:00, 135.70it/s]  Pretrain Epoch 60: Rec Loss = 11.636651
+  Pretrain Epoch 70: Rec Loss = 11.598134
+Pretrain:  70%|███████   | 70/100 [00:00<00:00, 133.74it/s]  Pretrain Epoch 80: Rec Loss = 11.564423
+Pretrain:  84%|████████▍ | 84/100 [00:00<00:00, 133.97it/s]  Pretrain Epoch 90: Rec Loss = 11.533837
+Pretrain:  98%|█████████▊| 98/100 [00:00<00:00, 132.36it/s]  Pretrain Epoch 100: Rec Loss = 11.501040
+Pretrain: 100%|██████████| 100/100 [00:00<00:00, 133.27it/s]
+✓ Pretrain finished! Final Rec Loss = 11.501040
+
+============================================================
+Stage 2: Fine-tuning with MoE Graph Fusion
+============================================================
+✓ Encoder frozen, only training fusion & projection heads
+✓ Early stopping threshold: ARI >= 0.30
+
+Finetune:   0%|          | 0/100 [00:00<?, ?it/s]Finetune:   2%|▏         | 2/100 [00:00<00:06, 14.29it/s]Finetune:   4%|▍         | 4/100 [00:00<00:06, 14.15it/s]Finetune:   6%|▌         | 6/100 [00:00<00:07, 13.33it/s]Finetune:   8%|▊         | 8/100 [00:00<00:07, 12.81it/s]  Train Epoch 10: Rec Loss = 10.050241, Contrast Loss = 7.723957, Cluster Loss = 0.000000
+Finetune:  10%|█         | 10/100 [00:00<00:07, 12.47it/s]Finetune:  12%|█▏        | 12/100 [00:00<00:07, 12.27it/s]Finetune:  14%|█▍        | 14/100 [00:01<00:06, 12.36it/s]Finetune:  16%|█▌        | 16/100 [00:01<00:06, 12.38it/s]Finetune:  18%|█▊        | 18/100 [00:01<00:06, 12.55it/s]  Train Epoch 20: Rec Loss = 9.902955, Contrast Loss = 7.434268, Cluster Loss = 0.000000
+Finetune:  20%|██        | 20/100 [00:01<00:06, 12.36it/s]Finetune:  22%|██▏       | 22/100 [00:01<00:06, 12.19it/s]Finetune:  24%|██▍       | 24/100 [00:01<00:06, 12.12it/s]Finetune:  26%|██▌       | 26/100 [00:02<00:06, 12.23it/s]Finetune:  28%|██▊       | 28/100 [00:02<00:05, 12.30it/s]  Train Epoch 30: Rec Loss = 9.803247, Contrast Loss = 7.239934, Cluster Loss = 0.000000
+Finetune:  30%|███       | 30/100 [00:02<00:05, 12.28it/s]Finetune:  32%|███▏      | 32/100 [00:02<00:05, 11.82it/s]Finetune:  34%|███▍      | 34/100 [00:02<00:05, 12.13it/s]Finetune:  36%|███▌      | 36/100 [00:02<00:05, 12.44it/s]Finetune:  38%|███▊      | 38/100 [00:03<00:04, 12.50it/s]  Train Epoch 40: Rec Loss = 9.729412, Contrast Loss = 7.096064, Cluster Loss = 0.000000
+Finetune:  40%|████      | 40/100 [00:03<00:04, 12.65it/s]Finetune:  42%|████▏     | 42/100 [00:03<00:04, 12.97it/s]Finetune:  44%|████▍     | 44/100 [00:03<00:04, 12.97it/s]Finetune:  46%|████▌     | 46/100 [00:03<00:04, 13.17it/s]Finetune:  48%|████▊     | 48/100 [00:03<00:03, 13.66it/s]  Train Epoch 50: Rec Loss = 9.669569, Contrast Loss = 6.981376, Cluster Loss = 0.000000
+Finetune:  50%|█████     | 50/100 [00:03<00:03, 13.42it/s]Finetune:  52%|█████▏    | 52/100 [00:04<00:03, 13.73it/s]Finetune:  54%|█████▍    | 54/100 [00:04<00:03, 13.97it/s]Finetune:  56%|█████▌    | 56/100 [00:04<00:03, 13.61it/s]Finetune:  58%|█████▊    | 58/100 [00:04<00:03, 13.47it/s]  Train Epoch 60: Rec Loss = 9.622545, Contrast Loss = 6.891371, Cluster Loss = 0.000000
+Finetune:  60%|██████    | 60/100 [00:04<00:02, 13.89it/s]Finetune:  62%|██████▏   | 62/100 [00:04<00:02, 13.85it/s]Finetune:  64%|██████▍   | 64/100 [00:04<00:02, 13.48it/s]Finetune:  66%|██████▌   | 66/100 [00:05<00:02, 13.80it/s]Finetune:  68%|██████▊   | 68/100 [00:05<00:02, 13.45it/s]  Train Epoch 70: Rec Loss = 9.579313, Contrast Loss = 6.809010, Cluster Loss = 0.000000
+Finetune:  70%|███████   | 70/100 [00:05<00:02, 13.70it/s]Finetune:  72%|███████▏  | 72/100 [00:05<00:02, 13.22it/s]Finetune:  74%|███████▍  | 74/100 [00:05<00:02, 12.87it/s]Finetune:  76%|███████▌  | 76/100 [00:05<00:01, 12.64it/s]Finetune:  78%|███████▊  | 78/100 [00:06<00:01, 13.32it/s]  Train Epoch 80: Rec Loss = 9.545792, Contrast Loss = 6.745856, Cluster Loss = 0.000000
+Finetune:  80%|████████  | 80/100 [00:06<00:01, 13.23it/s]Finetune:  82%|████████▏ | 82/100 [00:06<00:01, 13.35it/s]Finetune:  84%|████████▍ | 84/100 [00:06<00:01, 13.55it/s]Finetune:  86%|████████▌ | 86/100 [00:06<00:01, 13.49it/s]Finetune:  88%|████████▊ | 88/100 [00:06<00:00, 13.43it/s]  Train Epoch 90: Rec Loss = 9.517499, Contrast Loss = 6.692823, Cluster Loss = 0.000000
+Finetune:  90%|█████████ | 90/100 [00:06<00:00, 13.38it/s]Finetune:  92%|█████████▏| 92/100 [00:07<00:00, 13.45it/s]Finetune:  94%|█████████▍| 94/100 [00:07<00:00, 13.50it/s]Finetune:  96%|█████████▌| 96/100 [00:07<00:00, 13.67it/s]Finetune:  98%|█████████▊| 98/100 [00:07<00:00, 14.21it/s]  Train Epoch 100: Rec Loss = 9.489771, Contrast Loss = 6.640553, Cluster Loss = 0.000000
+
+  Finetune Epoch 100:
+    Total Loss   = 9.4898
+    Rec Loss     = 12.3390
+    Contrast Loss= 6.6406
+    Gate: spatial=0.539±0.124, expr=0.461±0.124
+Finetune: 100%|██████████| 100/100 [00:07<00:00, 14.06it/s]Finetune: 100%|██████████| 100/100 [00:07<00:00, 13.12it/s]
+
+✓ Finetune finished (max epochs reached)
+  [Gate Stats] spatial=0.539±0.124, expr=0.461±0.124
+fitting ...
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%
+[2026-03-11 10:51:03] [INFO]   → 151674 ARI: 0.4039
+[2026-03-11 10:51:03] [INFO] Processing 151675 (n_clusters=7)...
+✅ 成功强制加载 libR.so
+R 环境路径: /home/pxy/miniconda3/envs/r40/lib/R
+normalized data ---------------->
+正在构建图: spatial, 使用度量: cosine ...
+  -> 使用空间坐标 (euclidean)
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+spatial graph created successfully <----
+
+正在构建图: expr, 使用度量: euclidean ...
+  -> 使用 PCA 表达特征
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+expr graph created successfully <----
+
+============================================================
+Stage 1: Pre-training Shared Encoder
+============================================================
+Pretrain:   0%|          | 0/100 [00:00<?, ?it/s]Pretrain:   1%|          | 1/100 [00:00<00:25,  3.96it/s]  Pretrain Epoch 10: Rec Loss = 11.791090
+Pretrain:  12%|█▏        | 12/100 [00:00<00:02, 41.64it/s]  Pretrain Epoch 20: Rec Loss = 11.620616
+Pretrain:  23%|██▎       | 23/100 [00:00<00:01, 62.88it/s]  Pretrain Epoch 30: Rec Loss = 11.432496
+Pretrain:  34%|███▍      | 34/100 [00:00<00:00, 77.75it/s]  Pretrain Epoch 40: Rec Loss = 11.272294
+Pretrain:  47%|████▋     | 47/100 [00:00<00:00, 90.24it/s]  Pretrain Epoch 50: Rec Loss = 11.191905
+Pretrain:  58%|█████▊    | 58/100 [00:00<00:00, 95.59it/s]  Pretrain Epoch 60: Rec Loss = 11.150319
+Pretrain:  69%|██████▉   | 69/100 [00:00<00:00, 91.60it/s]  Pretrain Epoch 70: Rec Loss = 11.115647
+Pretrain:  79%|███████▉  | 79/100 [00:01<00:00, 92.28it/s]  Pretrain Epoch 80: Rec Loss = 11.090425
+  Pretrain Epoch 90: Rec Loss = 11.061723
+Pretrain:  90%|█████████ | 90/100 [00:01<00:00, 96.23it/s]  Pretrain Epoch 100: Rec Loss = 11.035612
+Pretrain: 100%|██████████| 100/100 [00:01<00:00, 82.13it/s]
+✓ Pretrain finished! Final Rec Loss = 11.035612
+
+============================================================
+Stage 2: Fine-tuning with MoE Graph Fusion
+============================================================
+✓ Encoder frozen, only training fusion & projection heads
+✓ Early stopping threshold: ARI >= 0.30
+
+Finetune:   0%|          | 0/100 [00:00<?, ?it/s]Finetune:   2%|▏         | 2/100 [00:00<00:09,  9.97it/s]Finetune:   3%|▎         | 3/100 [00:00<00:10,  9.08it/s]Finetune:   5%|▌         | 5/100 [00:00<00:09, 10.49it/s]Finetune:   7%|▋         | 7/100 [00:00<00:08, 10.62it/s]Finetune:   9%|▉         | 9/100 [00:00<00:07, 11.40it/s]  Train Epoch 10: Rec Loss = 9.790943, Contrast Loss = 7.766489, Cluster Loss = 0.000000
+Finetune:  11%|█         | 11/100 [00:00<00:07, 11.88it/s]Finetune:  13%|█▎        | 13/100 [00:01<00:07, 11.30it/s]Finetune:  15%|█▌        | 15/100 [00:01<00:07, 11.10it/s]Finetune:  17%|█▋        | 17/100 [00:01<00:07, 10.95it/s]Finetune:  19%|█▉        | 19/100 [00:01<00:07, 10.92it/s]  Train Epoch 20: Rec Loss = 9.660378, Contrast Loss = 7.508643, Cluster Loss = 0.000000
+Finetune:  21%|██        | 21/100 [00:01<00:07, 10.61it/s]Finetune:  23%|██▎       | 23/100 [00:02<00:07,  9.81it/s]Finetune:  24%|██▍       | 24/100 [00:02<00:07,  9.78it/s]Finetune:  25%|██▌       | 25/100 [00:02<00:07,  9.74it/s]Finetune:  27%|██▋       | 27/100 [00:02<00:06, 10.58it/s]Finetune:  29%|██▉       | 29/100 [00:02<00:06, 11.45it/s]  Train Epoch 30: Rec Loss = 9.571342, Contrast Loss = 7.333213, Cluster Loss = 0.000000
+Finetune:  31%|███       | 31/100 [00:02<00:05, 12.23it/s]Finetune:  33%|███▎      | 33/100 [00:03<00:05, 11.74it/s]Finetune:  35%|███▌      | 35/100 [00:03<00:05, 12.33it/s]Finetune:  37%|███▋      | 37/100 [00:03<00:05, 12.44it/s]Finetune:  39%|███▉      | 39/100 [00:03<00:04, 12.73it/s]  Train Epoch 40: Rec Loss = 9.504593, Contrast Loss = 7.202488, Cluster Loss = 0.000000
+Finetune:  41%|████      | 41/100 [00:03<00:04, 11.92it/s]Finetune:  43%|████▎     | 43/100 [00:03<00:05, 10.88it/s]Finetune:  45%|████▌     | 45/100 [00:04<00:04, 11.49it/s]Finetune:  47%|████▋     | 47/100 [00:04<00:04, 11.23it/s]Finetune:  49%|████▉     | 49/100 [00:04<00:04, 10.93it/s]  Train Epoch 50: Rec Loss = 9.453998, Contrast Loss = 7.104517, Cluster Loss = 0.000000
+Finetune:  51%|█████     | 51/100 [00:04<00:04, 11.10it/s]Finetune:  53%|█████▎    | 53/100 [00:04<00:04,  9.99it/s]Finetune:  55%|█████▌    | 55/100 [00:05<00:04,  9.83it/s]Finetune:  57%|█████▋    | 57/100 [00:05<00:04,  9.66it/s]Finetune:  58%|█████▊    | 58/100 [00:05<00:04,  9.55it/s]  Train Epoch 60: Rec Loss = 9.412782, Contrast Loss = 7.025473, Cluster Loss = 0.000000
+Finetune:  60%|██████    | 60/100 [00:05<00:03, 10.03it/s]Finetune:  62%|██████▏   | 62/100 [00:05<00:03, 10.80it/s]Finetune:  64%|██████▍   | 64/100 [00:05<00:03, 11.14it/s]Finetune:  66%|██████▌   | 66/100 [00:06<00:03, 10.88it/s]Finetune:  68%|██████▊   | 68/100 [00:06<00:03, 10.15it/s]  Train Epoch 70: Rec Loss = 9.378142, Contrast Loss = 6.959767, Cluster Loss = 0.000000
+Finetune:  70%|███████   | 70/100 [00:06<00:02, 10.31it/s]Finetune:  72%|███████▏  | 72/100 [00:06<00:02, 10.84it/s]Finetune:  74%|███████▍  | 74/100 [00:06<00:02, 11.57it/s]Finetune:  76%|███████▌  | 76/100 [00:06<00:02, 11.23it/s]Finetune:  78%|███████▊  | 78/100 [00:07<00:02, 10.72it/s]  Train Epoch 80: Rec Loss = 9.346476, Contrast Loss = 6.899649, Cluster Loss = 0.000000
+Finetune:  80%|████████  | 80/100 [00:07<00:01, 10.67it/s]Finetune:  82%|████████▏ | 82/100 [00:07<00:01, 10.93it/s]Finetune:  84%|████████▍ | 84/100 [00:07<00:01, 10.30it/s]Finetune:  86%|████████▌ | 86/100 [00:07<00:01, 10.30it/s]Finetune:  88%|████████▊ | 88/100 [00:08<00:01, 10.07it/s]  Train Epoch 90: Rec Loss = 9.322922, Contrast Loss = 6.855946, Cluster Loss = 0.000000
+Finetune:  90%|█████████ | 90/100 [00:08<00:01,  9.99it/s]Finetune:  92%|█████████▏| 92/100 [00:08<00:00, 10.46it/s]Finetune:  94%|█████████▍| 94/100 [00:08<00:00, 10.11it/s]Finetune:  96%|█████████▌| 96/100 [00:08<00:00, 10.28it/s]Finetune:  98%|█████████▊| 98/100 [00:09<00:00, 10.88it/s]  Train Epoch 100: Rec Loss = 9.296827, Contrast Loss = 6.806996, Cluster Loss = 0.000000
+
+  Finetune Epoch 100:
+    Total Loss   = 9.2968
+    Rec Loss     = 11.7867
+    Contrast Loss= 6.8070
+    Gate: spatial=0.572±0.152, expr=0.428±0.152
+Finetune: 100%|██████████| 100/100 [00:09<00:00, 10.07it/s]Finetune: 100%|██████████| 100/100 [00:09<00:00, 10.71it/s]
+
+✓ Finetune finished (max epochs reached)
+  [Gate Stats] spatial=0.572±0.152, expr=0.428±0.152
+fitting ...
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%
+[2026-03-11 10:52:26] [INFO]   → 151675 ARI: 0.4575
+[2026-03-11 10:52:26] [INFO] Processing 151676 (n_clusters=7)...
+✅ 成功强制加载 libR.so
+R 环境路径: /home/pxy/miniconda3/envs/r40/lib/R
+normalized data ---------------->
+正在构建图: spatial, 使用度量: cosine ...
+  -> 使用空间坐标 (euclidean)
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+spatial graph created successfully <----
+
+正在构建图: expr, 使用度量: euclidean ...
+  -> 使用 PCA 表达特征
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+expr graph created successfully <----
+
+============================================================
+Stage 1: Pre-training Shared Encoder
+============================================================
+Pretrain:   0%|          | 0/100 [00:00<?, ?it/s]  Pretrain Epoch 10: Rec Loss = 11.951616
+Pretrain:  10%|█         | 10/100 [00:00<00:00, 92.57it/s]  Pretrain Epoch 20: Rec Loss = 11.798180
+Pretrain:  20%|██        | 20/100 [00:00<00:00, 88.48it/s]  Pretrain Epoch 30: Rec Loss = 11.631322
+Pretrain:  30%|███       | 30/100 [00:00<00:00, 90.89it/s]  Pretrain Epoch 40: Rec Loss = 11.490723
+Pretrain:  40%|████      | 40/100 [00:00<00:00, 93.63it/s]  Pretrain Epoch 50: Rec Loss = 11.415625
+Pretrain:  50%|█████     | 50/100 [00:00<00:00, 95.49it/s]  Pretrain Epoch 60: Rec Loss = 11.374405
+Pretrain:  61%|██████    | 61/100 [00:00<00:00, 97.58it/s]  Pretrain Epoch 70: Rec Loss = 11.335919
+Pretrain:  72%|███████▏  | 72/100 [00:00<00:00, 98.25it/s]  Pretrain Epoch 80: Rec Loss = 11.307793
+Pretrain:  82%|████████▏ | 82/100 [00:00<00:00, 96.26it/s]  Pretrain Epoch 90: Rec Loss = 11.277285
+Pretrain:  92%|█████████▏| 92/100 [00:00<00:00, 95.19it/s]  Pretrain Epoch 100: Rec Loss = 11.248238
+Pretrain: 100%|██████████| 100/100 [00:01<00:00, 95.13it/s]
+✓ Pretrain finished! Final Rec Loss = 11.248238
+
+============================================================
+Stage 2: Fine-tuning with MoE Graph Fusion
+============================================================
+✓ Encoder frozen, only training fusion & projection heads
+✓ Early stopping threshold: ARI >= 0.30
+
+Finetune:   0%|          | 0/100 [00:00<?, ?it/s]Finetune:   1%|          | 1/100 [00:00<00:11,  8.96it/s]Finetune:   2%|▏         | 2/100 [00:00<00:11,  8.75it/s]Finetune:   3%|▎         | 3/100 [00:00<00:11,  8.44it/s]Finetune:   5%|▌         | 5/100 [00:00<00:09,  9.67it/s]Finetune:   6%|▌         | 6/100 [00:00<00:09,  9.54it/s]Finetune:   8%|▊         | 8/100 [00:00<00:08, 10.34it/s]  Train Epoch 10: Rec Loss = 9.857607, Contrast Loss = 7.757857, Cluster Loss = 0.000000
+Finetune:  10%|█         | 10/100 [00:00<00:08, 10.62it/s]Finetune:  12%|█▏        | 12/100 [00:01<00:08, 10.04it/s]Finetune:  14%|█▍        | 14/100 [00:01<00:09,  9.50it/s]Finetune:  15%|█▌        | 15/100 [00:01<00:08,  9.51it/s]Finetune:  16%|█▌        | 16/100 [00:01<00:08,  9.58it/s]Finetune:  17%|█▋        | 17/100 [00:01<00:08,  9.66it/s]Finetune:  19%|█▉        | 19/100 [00:01<00:08,  9.93it/s]  Train Epoch 20: Rec Loss = 9.712711, Contrast Loss = 7.471074, Cluster Loss = 0.000000
+Finetune:  20%|██        | 20/100 [00:02<00:08,  9.82it/s]Finetune:  22%|██▏       | 22/100 [00:02<00:08,  9.56it/s]Finetune:  23%|██▎       | 23/100 [00:02<00:08,  9.54it/s]Finetune:  24%|██▍       | 24/100 [00:02<00:07,  9.60it/s]Finetune:  25%|██▌       | 25/100 [00:02<00:07,  9.59it/s]Finetune:  26%|██▌       | 26/100 [00:02<00:07,  9.61it/s]Finetune:  27%|██▋       | 27/100 [00:02<00:07,  9.65it/s]Finetune:  29%|██▉       | 29/100 [00:02<00:06, 10.86it/s]  Train Epoch 30: Rec Loss = 9.617767, Contrast Loss = 7.283825, Cluster Loss = 0.000000
+Finetune:  31%|███       | 31/100 [00:03<00:05, 11.72it/s]Finetune:  33%|███▎      | 33/100 [00:03<00:05, 12.20it/s]Finetune:  35%|███▌      | 35/100 [00:03<00:05, 11.82it/s]Finetune:  37%|███▋      | 37/100 [00:03<00:05, 12.02it/s]Finetune:  39%|███▉      | 39/100 [00:03<00:05, 11.82it/s]  Train Epoch 40: Rec Loss = 9.547934, Contrast Loss = 7.147096, Cluster Loss = 0.000000
+Finetune:  41%|████      | 41/100 [00:03<00:05, 11.76it/s]Finetune:  43%|████▎     | 43/100 [00:04<00:04, 12.32it/s]Finetune:  45%|████▌     | 45/100 [00:04<00:04, 11.99it/s]Finetune:  47%|████▋     | 47/100 [00:04<00:04, 11.83it/s]Finetune:  49%|████▉     | 49/100 [00:04<00:04, 12.34it/s]  Train Epoch 50: Rec Loss = 9.495771, Contrast Loss = 7.046159, Cluster Loss = 0.000000
+Finetune:  51%|█████     | 51/100 [00:04<00:03, 12.65it/s]Finetune:  53%|█████▎    | 53/100 [00:04<00:03, 12.60it/s]Finetune:  55%|█████▌    | 55/100 [00:05<00:03, 11.53it/s]Finetune:  57%|█████▋    | 57/100 [00:05<00:03, 11.20it/s]Finetune:  59%|█████▉    | 59/100 [00:05<00:03, 11.12it/s]  Train Epoch 60: Rec Loss = 9.454866, Contrast Loss = 6.967443, Cluster Loss = 0.000000
+Finetune:  61%|██████    | 61/100 [00:05<00:03, 10.99it/s]Finetune:  63%|██████▎   | 63/100 [00:05<00:03, 10.43it/s]Finetune:  65%|██████▌   | 65/100 [00:06<00:03, 10.71it/s]Finetune:  67%|██████▋   | 67/100 [00:06<00:03, 10.69it/s]Finetune:  69%|██████▉   | 69/100 [00:06<00:02, 10.51it/s]  Train Epoch 70: Rec Loss = 9.420623, Contrast Loss = 6.902379, Cluster Loss = 0.000000
+Finetune:  71%|███████   | 71/100 [00:06<00:02, 10.39it/s]Finetune:  73%|███████▎  | 73/100 [00:06<00:02, 10.76it/s]Finetune:  75%|███████▌  | 75/100 [00:06<00:02, 11.20it/s]Finetune:  77%|███████▋  | 77/100 [00:07<00:01, 11.84it/s]Finetune:  79%|███████▉  | 79/100 [00:07<00:01, 11.92it/s]  Train Epoch 80: Rec Loss = 9.391335, Contrast Loss = 6.847205, Cluster Loss = 0.000000
+Finetune:  81%|████████  | 81/100 [00:07<00:01, 11.50it/s]Finetune:  83%|████████▎ | 83/100 [00:07<00:01, 12.07it/s]Finetune:  85%|████████▌ | 85/100 [00:07<00:01, 11.66it/s]Finetune:  87%|████████▋ | 87/100 [00:07<00:01, 11.68it/s]Finetune:  89%|████████▉ | 89/100 [00:08<00:00, 11.88it/s]  Train Epoch 90: Rec Loss = 9.365551, Contrast Loss = 6.798440, Cluster Loss = 0.000000
+Finetune:  91%|█████████ | 91/100 [00:08<00:00, 11.06it/s]Finetune:  93%|█████████▎| 93/100 [00:08<00:00, 10.97it/s]Finetune:  95%|█████████▌| 95/100 [00:08<00:00, 11.49it/s]Finetune:  97%|█████████▋| 97/100 [00:08<00:00, 11.53it/s]Finetune:  99%|█████████▉| 99/100 [00:08<00:00, 12.12it/s]  Train Epoch 100: Rec Loss = 9.343518, Contrast Loss = 6.757595, Cluster Loss = 0.000000
+
+  Finetune Epoch 100:
+    Total Loss   = 9.3435
+    Rec Loss     = 11.9294
+    Contrast Loss= 6.7576
+    Gate: spatial=0.548±0.131, expr=0.452±0.131
+Finetune: 100%|██████████| 100/100 [00:09<00:00, 11.04it/s]
+
+✓ Finetune finished (max epochs reached)
+  [Gate Stats] spatial=0.548±0.131, expr=0.452±0.131
+fitting ...
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%
+[2026-03-11 10:54:00] [INFO]   → 151676 ARI: 0.6083
+[2026-03-11 10:54:00] [INFO] Processing 151507 (n_clusters=7)...
+✅ 成功强制加载 libR.so
+R 环境路径: /home/pxy/miniconda3/envs/r40/lib/R
+normalized data ---------------->
+正在构建图: spatial, 使用度量: cosine ...
+  -> 使用空间坐标 (euclidean)
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+spatial graph created successfully <----
+
+正在构建图: expr, 使用度量: euclidean ...
+  -> 使用 PCA 表达特征
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+expr graph created successfully <----
+
+============================================================
+Stage 1: Pre-training Shared Encoder
+============================================================
+Pretrain:   0%|          | 0/100 [00:00<?, ?it/s]  Pretrain Epoch 10: Rec Loss = 10.287947
+Pretrain:  10%|█         | 10/100 [00:00<00:01, 87.88it/s]  Pretrain Epoch 20: Rec Loss = 10.148400
+Pretrain:  20%|██        | 20/100 [00:00<00:00, 89.18it/s]Pretrain:  29%|██▉       | 29/100 [00:00<00:00, 88.95it/s]  Pretrain Epoch 30: Rec Loss = 10.011913
+Pretrain:  39%|███▉      | 39/100 [00:00<00:00, 91.96it/s]  Pretrain Epoch 40: Rec Loss = 9.911245
+Pretrain:  49%|████▉     | 49/100 [00:00<00:00, 91.60it/s]  Pretrain Epoch 50: Rec Loss = 9.863704
+Pretrain:  59%|█████▉    | 59/100 [00:00<00:00, 92.36it/s]  Pretrain Epoch 60: Rec Loss = 9.828255
+Pretrain:  69%|██████▉   | 69/100 [00:00<00:00, 91.01it/s]  Pretrain Epoch 70: Rec Loss = 9.801356
+Pretrain:  79%|███████▉  | 79/100 [00:00<00:00, 91.73it/s]  Pretrain Epoch 80: Rec Loss = 9.771770
+  Pretrain Epoch 90: Rec Loss = 9.745474
+Pretrain:  90%|█████████ | 90/100 [00:00<00:00, 93.89it/s]  Pretrain Epoch 100: Rec Loss = 9.715147
+Pretrain: 100%|██████████| 100/100 [00:01<00:00, 94.36it/s]Pretrain: 100%|██████████| 100/100 [00:01<00:00, 92.31it/s]
+✓ Pretrain finished! Final Rec Loss = 9.715147
+
+============================================================
+Stage 2: Fine-tuning with MoE Graph Fusion
+============================================================
+✓ Encoder frozen, only training fusion & projection heads
+✓ Early stopping threshold: ARI >= 0.30
+
+Finetune:   0%|          | 0/100 [00:00<?, ?it/s]Finetune:   1%|          | 1/100 [00:00<00:13,  7.18it/s]Finetune:   2%|▏         | 2/100 [00:00<00:12,  7.70it/s]Finetune:   3%|▎         | 3/100 [00:00<00:15,  6.43it/s]Finetune:   4%|▍         | 4/100 [00:00<00:15,  6.38it/s]Finetune:   6%|▌         | 6/100 [00:00<00:11,  8.11it/s]Finetune:   8%|▊         | 8/100 [00:00<00:10,  9.09it/s]Finetune:   9%|▉         | 9/100 [00:01<00:09,  9.17it/s]  Train Epoch 10: Rec Loss = 9.192659, Contrast Loss = 8.093111, Cluster Loss = 0.000000
+Finetune:  10%|█         | 10/100 [00:01<00:10,  8.66it/s]Finetune:  11%|█         | 11/100 [00:01<00:10,  8.14it/s]Finetune:  12%|█▏        | 12/100 [00:01<00:10,  8.05it/s]Finetune:  13%|█▎        | 13/100 [00:01<00:10,  8.09it/s]Finetune:  14%|█▍        | 14/100 [00:01<00:10,  8.19it/s]Finetune:  15%|█▌        | 15/100 [00:01<00:10,  8.33it/s]Finetune:  16%|█▌        | 16/100 [00:01<00:10,  8.07it/s]Finetune:  17%|█▋        | 17/100 [00:02<00:10,  7.95it/s]Finetune:  18%|█▊        | 18/100 [00:02<00:10,  7.52it/s]Finetune:  19%|█▉        | 19/100 [00:02<00:11,  7.26it/s]  Train Epoch 20: Rec Loss = 9.053122, Contrast Loss = 7.816752, Cluster Loss = 0.000000
+Finetune:  20%|██        | 20/100 [00:02<00:11,  7.12it/s]Finetune:  21%|██        | 21/100 [00:02<00:10,  7.36it/s]Finetune:  22%|██▏       | 22/100 [00:02<00:10,  7.70it/s]Finetune:  23%|██▎       | 23/100 [00:02<00:09,  7.95it/s]Finetune:  24%|██▍       | 24/100 [00:03<00:09,  8.18it/s]Finetune:  25%|██▌       | 25/100 [00:03<00:09,  8.32it/s]Finetune:  26%|██▌       | 26/100 [00:03<00:08,  8.35it/s]Finetune:  27%|██▋       | 27/100 [00:03<00:08,  8.40it/s]Finetune:  28%|██▊       | 28/100 [00:03<00:08,  8.54it/s]Finetune:  29%|██▉       | 29/100 [00:03<00:08,  8.27it/s]  Train Epoch 30: Rec Loss = 8.962803, Contrast Loss = 7.637403, Cluster Loss = 0.000000
+Finetune:  30%|███       | 30/100 [00:03<00:08,  8.39it/s]Finetune:  31%|███       | 31/100 [00:03<00:08,  8.13it/s]Finetune:  32%|███▏      | 32/100 [00:04<00:08,  7.74it/s]Finetune:  33%|███▎      | 33/100 [00:04<00:08,  7.45it/s]Finetune:  34%|███▍      | 34/100 [00:04<00:09,  7.17it/s]Finetune:  35%|███▌      | 35/100 [00:04<00:09,  7.09it/s]Finetune:  36%|███▌      | 36/100 [00:04<00:09,  6.97it/s]Finetune:  37%|███▋      | 37/100 [00:04<00:09,  6.88it/s]Finetune:  38%|███▊      | 38/100 [00:04<00:08,  7.09it/s]Finetune:  39%|███▉      | 39/100 [00:05<00:08,  7.02it/s]  Train Epoch 40: Rec Loss = 8.892476, Contrast Loss = 7.499297, Cluster Loss = 0.000000
+Finetune:  40%|████      | 40/100 [00:05<00:08,  6.85it/s]Finetune:  41%|████      | 41/100 [00:05<00:08,  6.98it/s]Finetune:  42%|████▏     | 42/100 [00:05<00:08,  6.97it/s]Finetune:  43%|████▎     | 43/100 [00:05<00:08,  6.94it/s]Finetune:  44%|████▍     | 44/100 [00:05<00:08,  6.98it/s]Finetune:  45%|████▌     | 45/100 [00:05<00:07,  6.90it/s]Finetune:  46%|████▌     | 46/100 [00:06<00:08,  6.59it/s]Finetune:  47%|████▋     | 47/100 [00:06<00:07,  6.72it/s]Finetune:  48%|████▊     | 48/100 [00:06<00:07,  6.73it/s]Finetune:  49%|████▉     | 49/100 [00:06<00:07,  6.65it/s]  Train Epoch 50: Rec Loss = 8.840321, Contrast Loss = 7.398121, Cluster Loss = 0.000000
+Finetune:  50%|█████     | 50/100 [00:06<00:07,  6.72it/s]Finetune:  51%|█████     | 51/100 [00:06<00:07,  6.89it/s]Finetune:  52%|█████▏    | 52/100 [00:06<00:07,  6.75it/s]Finetune:  53%|█████▎    | 53/100 [00:07<00:06,  6.76it/s]Finetune:  54%|█████▍    | 54/100 [00:07<00:06,  6.79it/s]Finetune:  55%|█████▌    | 55/100 [00:07<00:06,  7.11it/s]Finetune:  56%|█████▌    | 56/100 [00:07<00:06,  6.96it/s]Finetune:  57%|█████▋    | 57/100 [00:07<00:06,  6.56it/s]Finetune:  58%|█████▊    | 58/100 [00:07<00:06,  6.63it/s]Finetune:  59%|█████▉    | 59/100 [00:07<00:05,  6.84it/s]  Train Epoch 60: Rec Loss = 8.795250, Contrast Loss = 7.311117, Cluster Loss = 0.000000
+Finetune:  60%|██████    | 60/100 [00:08<00:05,  6.87it/s]Finetune:  61%|██████    | 61/100 [00:08<00:05,  6.88it/s]Finetune:  62%|██████▏   | 62/100 [00:08<00:05,  6.70it/s]Finetune:  63%|██████▎   | 63/100 [00:08<00:05,  6.29it/s]Finetune:  64%|██████▍   | 64/100 [00:08<00:05,  6.27it/s]Finetune:  65%|██████▌   | 65/100 [00:08<00:05,  6.31it/s]Finetune:  66%|██████▌   | 66/100 [00:09<00:05,  6.71it/s]Finetune:  67%|██████▋   | 67/100 [00:09<00:04,  6.79it/s]Finetune:  68%|██████▊   | 68/100 [00:09<00:04,  6.85it/s]Finetune:  69%|██████▉   | 69/100 [00:09<00:04,  6.64it/s]  Train Epoch 70: Rec Loss = 8.757773, Contrast Loss = 7.238872, Cluster Loss = 0.000000
+Finetune:  70%|███████   | 70/100 [00:09<00:04,  6.24it/s]Finetune:  71%|███████   | 71/100 [00:09<00:04,  6.41it/s]Finetune:  72%|███████▏  | 72/100 [00:09<00:04,  6.45it/s]Finetune:  73%|███████▎  | 73/100 [00:10<00:04,  6.57it/s]Finetune:  74%|███████▍  | 74/100 [00:10<00:03,  6.58it/s]Finetune:  75%|███████▌  | 75/100 [00:10<00:03,  6.62it/s]Finetune:  76%|███████▌  | 76/100 [00:10<00:03,  6.54it/s]Finetune:  77%|███████▋  | 77/100 [00:10<00:03,  6.60it/s]Finetune:  78%|███████▊  | 78/100 [00:10<00:03,  6.69it/s]Finetune:  79%|███████▉  | 79/100 [00:11<00:03,  6.65it/s]  Train Epoch 80: Rec Loss = 8.726999, Contrast Loss = 7.180196, Cluster Loss = 0.000000
+Finetune:  80%|████████  | 80/100 [00:11<00:03,  6.20it/s]Finetune:  81%|████████  | 81/100 [00:11<00:03,  6.07it/s]Finetune:  82%|████████▏ | 82/100 [00:11<00:02,  6.49it/s]Finetune:  83%|████████▎ | 83/100 [00:11<00:02,  6.89it/s]Finetune:  84%|████████▍ | 84/100 [00:11<00:02,  7.15it/s]Finetune:  85%|████████▌ | 85/100 [00:11<00:01,  7.53it/s]Finetune:  86%|████████▌ | 86/100 [00:12<00:01,  7.48it/s]Finetune:  87%|████████▋ | 87/100 [00:12<00:01,  7.40it/s]Finetune:  88%|████████▊ | 88/100 [00:12<00:01,  7.49it/s]Finetune:  89%|████████▉ | 89/100 [00:12<00:01,  7.18it/s]  Train Epoch 90: Rec Loss = 8.697704, Contrast Loss = 7.123852, Cluster Loss = 0.000000
+Finetune:  90%|█████████ | 90/100 [00:12<00:01,  7.12it/s]Finetune:  91%|█████████ | 91/100 [00:12<00:01,  7.20it/s]Finetune:  92%|█████████▏| 92/100 [00:12<00:01,  7.02it/s]Finetune:  93%|█████████▎| 93/100 [00:13<00:01,  6.95it/s]Finetune:  94%|█████████▍| 94/100 [00:13<00:00,  7.19it/s]Finetune:  95%|█████████▌| 95/100 [00:13<00:00,  7.07it/s]Finetune:  96%|█████████▌| 96/100 [00:13<00:00,  7.17it/s]Finetune:  97%|█████████▋| 97/100 [00:13<00:00,  7.12it/s]Finetune:  98%|█████████▊| 98/100 [00:13<00:00,  7.17it/s]Finetune:  99%|█████████▉| 99/100 [00:13<00:00,  7.16it/s]  Train Epoch 100: Rec Loss = 8.673168, Contrast Loss = 7.077274, Cluster Loss = 0.000000
+
+  Finetune Epoch 100:
+    Total Loss   = 8.6732
+    Rec Loss     = 10.2691
+    Contrast Loss= 7.0773
+    Gate: spatial=0.544±0.172, expr=0.456±0.172
+Finetune: 100%|██████████| 100/100 [00:14<00:00,  6.42it/s]Finetune: 100%|██████████| 100/100 [00:14<00:00,  7.12it/s]
+
+✓ Finetune finished (max epochs reached)
+  [Gate Stats] spatial=0.544±0.172, expr=0.456±0.172
+fitting ...
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%
+[2026-03-11 10:55:49] [INFO]   → 151507 ARI: 0.5006
+[2026-03-11 10:55:49] [INFO] Processing 151508 (n_clusters=7)...
+✅ 成功强制加载 libR.so
+R 环境路径: /home/pxy/miniconda3/envs/r40/lib/R
+normalized data ---------------->
+正在构建图: spatial, 使用度量: cosine ...
+  -> 使用空间坐标 (euclidean)
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+spatial graph created successfully <----
+
+正在构建图: expr, 使用度量: euclidean ...
+  -> 使用 PCA 表达特征
+  -> 计算最近邻 (NearestNeighbors)...
+  -> 对称化与归一化...
+expr graph created successfully <----
+
+============================================================
+Stage 1: Pre-training Shared Encoder
+============================================================
+Pretrain:   0%|          | 0/100 [00:00<?, ?it/s]  Pretrain Epoch 10: Rec Loss = 9.832929
+Pretrain:  10%|█         | 10/100 [00:00<00:00, 95.61it/s]  Pretrain Epoch 20: Rec Loss = 9.733112
+Pretrain:  20%|██        | 20/100 [00:00<00:00, 96.88it/s]  Pretrain Epoch 30: Rec Loss = 9.629760
+Pretrain:  31%|███       | 31/100 [00:00<00:00, 100.53it/s]  Pretrain Epoch 40: Rec Loss = 9.551210
+Pretrain:  43%|████▎     | 43/100 [00:00<00:00, 103.99it/s]  Pretrain Epoch 50: Rec Loss = 9.512147
+Pretrain:  55%|█████▌    | 55/100 [00:00<00:00, 109.06it/s]  Pretrain Epoch 60: Rec Loss = 9.483018
+Pretrain:  67%|██████▋   | 67/100 [00:00<00:00, 110.01it/s]  Pretrain Epoch 70: Rec Loss = 9.451935
+Pretrain:  79%|███████▉  | 79/100 [00:00<00:00, 108.08it/s]  Pretrain Epoch 80: Rec Loss = 9.426017
+  Pretrain Epoch 90: Rec Loss = 9.399594
+Pretrain:  90%|█████████ | 90/100 [00:00<00:00, 102.65it/s]  Pretrain Epoch 100: Rec Loss = 9.368632
+Pretrain: 100%|██████████| 100/100 [00:00<00:00, 102.22it/s]
+✓ Pretrain finished! Final Rec Loss = 9.368632
+
+============================================================
+Stage 2: Fine-tuning with MoE Graph Fusion
+============================================================
+✓ Encoder frozen, only training fusion & projection heads
+✓ Early stopping threshold: ARI >= 0.30
+
+Finetune:   0%|          | 0/100 [00:00<?, ?it/s]Finetune:   1%|          | 1/100 [00:00<00:12,  8.01it/s]Finetune:   2%|▏         | 2/100 [00:00<00:13,  7.28it/s]Finetune:   3%|▎         | 3/100 [00:00<00:13,  7.01it/s]Finetune:   4%|▍         | 4/100 [00:00<00:14,  6.84it/s]Finetune:   5%|▌         | 5/100 [00:00<00:13,  6.79it/s]Finetune:   6%|▌         | 6/100 [00:00<00:13,  6.95it/s]Finetune:   7%|▋         | 7/100 [00:01<00:14,  6.54it/s]Finetune:   8%|▊         | 8/100 [00:01<00:13,  6.62it/s]Finetune:   9%|▉         | 9/100 [00:01<00:14,  6.23it/s]  Train Epoch 10: Rec Loss = 8.965614, Contrast Loss = 8.117544, Cluster Loss = 0.000000
+Finetune:  10%|█         | 10/100 [00:01<00:14,  6.31it/s]Finetune:  11%|█         | 11/100 [00:01<00:13,  6.42it/s]Finetune:  12%|█▏        | 12/100 [00:01<00:12,  7.01it/s]Finetune:  13%|█▎        | 13/100 [00:01<00:12,  6.92it/s]Finetune:  14%|█▍        | 14/100 [00:02<00:12,  6.91it/s]Finetune:  15%|█▌        | 15/100 [00:02<00:12,  6.76it/s]Finetune:  16%|█▌        | 16/100 [00:02<00:12,  6.85it/s]Finetune:  17%|█▋        | 17/100 [00:02<00:12,  6.87it/s]Finetune:  18%|█▊        | 18/100 [00:02<00:11,  6.96it/s]Finetune:  19%|█▉        | 19/100 [00:02<00:11,  7.29it/s]  Train Epoch 20: Rec Loss = 8.823598, Contrast Loss = 7.835532, Cluster Loss = 0.000000
+Finetune:  20%|██        | 20/100 [00:02<00:11,  6.93it/s]Finetune:  21%|██        | 21/100 [00:03<00:11,  6.84it/s]Finetune:  22%|██▏       | 22/100 [00:03<00:10,  7.24it/s]Finetune:  23%|██▎       | 23/100 [00:03<00:10,  7.45it/s]Finetune:  24%|██▍       | 24/100 [00:03<00:09,  7.65it/s]Finetune:  25%|██▌       | 25/100 [00:03<00:10,  7.12it/s]Finetune:  26%|██▌       | 26/100 [00:03<00:10,  7.26it/s]Finetune:  27%|██▋       | 27/100 [00:03<00:11,  6.55it/s]Finetune:  28%|██▊       | 28/100 [00:04<00:11,  6.47it/s]Finetune:  29%|██▉       | 29/100 [00:04<00:11,  6.35it/s]  Train Epoch 30: Rec Loss = 8.739130, Contrast Loss = 7.666585, Cluster Loss = 0.000000
+Finetune:  30%|███       | 30/100 [00:04<00:10,  6.57it/s]Finetune:  31%|███       | 31/100 [00:04<00:10,  6.54it/s]Finetune:  32%|███▏      | 32/100 [00:04<00:10,  6.63it/s]Finetune:  33%|███▎      | 33/100 [00:04<00:10,  6.40it/s]Finetune:  34%|███▍      | 34/100 [00:05<00:10,  6.59it/s]Finetune:  35%|███▌      | 35/100 [00:05<00:09,  6.79it/s]Finetune:  36%|███▌      | 36/100 [00:05<00:09,  6.74it/s]Finetune:  37%|███▋      | 37/100 [00:05<00:09,  6.91it/s]Finetune:  38%|███▊      | 38/100 [00:05<00:09,  6.68it/s]Finetune:  39%|███▉      | 39/100 [00:05<00:09,  6.52it/s]  Train Epoch 40: Rec Loss = 8.677004, Contrast Loss = 7.544244, Cluster Loss = 0.000000
+Finetune:  40%|████      | 40/100 [00:05<00:09,  6.37it/s]Finetune:  41%|████      | 41/100 [00:06<00:08,  6.58it/s]Finetune:  42%|████▏     | 42/100 [00:06<00:08,  6.60it/s]Finetune:  43%|████▎     | 43/100 [00:06<00:08,  6.80it/s]Finetune:  44%|████▍     | 44/100 [00:06<00:08,  6.78it/s]Finetune:  45%|████▌     | 45/100 [00:06<00:08,  6.86it/s]Finetune:  46%|████▌     | 46/100 [00:06<00:07,  7.27it/s]Finetune:  47%|████▋     | 47/100 [00:06<00:07,  7.24it/s]Finetune:  48%|████▊     | 48/100 [00:07<00:06,  7.49it/s]Finetune:  49%|████▉     | 49/100 [00:07<00:06,  7.67it/s]  Train Epoch 50: Rec Loss = 8.631405, Contrast Loss = 7.454537, Cluster Loss = 0.000000
+Finetune:  50%|█████     | 50/100 [00:07<00:06,  7.72it/s]Finetune:  51%|█████     | 51/100 [00:07<00:06,  7.39it/s]Finetune:  52%|█████▏    | 52/100 [00:07<00:06,  7.05it/s]Finetune:  53%|█████▎    | 53/100 [00:07<00:06,  6.95it/s]Finetune:  54%|█████▍    | 54/100 [00:07<00:06,  6.74it/s]Finetune:  55%|█████▌    | 55/100 [00:08<00:06,  6.67it/s]Finetune:  56%|█████▌    | 56/100 [00:08<00:06,  6.75it/s]Finetune:  57%|█████▋    | 57/100 [00:08<00:06,  6.65it/s]Finetune:  58%|█████▊    | 58/100 [00:08<00:06,  6.60it/s]Finetune:  59%|█████▉    | 59/100 [00:08<00:06,  6.54it/s]  Train Epoch 60: Rec Loss = 8.589824, Contrast Loss = 7.373300, Cluster Loss = 0.000000
+Finetune:  60%|██████    | 60/100 [00:08<00:06,  6.49it/s]Finetune:  61%|██████    | 61/100 [00:09<00:06,  5.95it/s]Finetune:  62%|██████▏   | 62/100 [00:09<00:06,  6.24it/s]Finetune:  63%|██████▎   | 63/100 [00:09<00:05,  6.46it/s]Finetune:  64%|██████▍   | 64/100 [00:09<00:05,  6.72it/s]Finetune:  65%|██████▌   | 65/100 [00:09<00:05,  6.77it/s]Finetune:  66%|██████▌   | 66/100 [00:09<00:04,  6.87it/s]Finetune:  67%|██████▋   | 67/100 [00:09<00:04,  6.69it/s]Finetune:  68%|██████▊   | 68/100 [00:10<00:04,  6.42it/s]Finetune:  69%|██████▉   | 69/100 [00:10<00:04,  6.64it/s]  Train Epoch 70: Rec Loss = 8.558158, Contrast Loss = 7.311308, Cluster Loss = 0.000000
+Finetune:  70%|███████   | 70/100 [00:10<00:04,  6.63it/s]Finetune:  71%|███████   | 71/100 [00:10<00:04,  6.76it/s]Finetune:  72%|███████▏  | 72/100 [00:10<00:04,  6.72it/s]Finetune:  73%|███████▎  | 73/100 [00:10<00:04,  6.61it/s]Finetune:  74%|███████▍  | 74/100 [00:10<00:03,  6.75it/s]Finetune:  75%|███████▌  | 75/100 [00:11<00:03,  6.78it/s]Finetune:  76%|███████▌  | 76/100 [00:11<00:03,  6.67it/s]Finetune:  77%|███████▋  | 77/100 [00:11<00:03,  6.63it/s]Finetune:  78%|███████▊  | 78/100 [00:11<00:03,  6.45it/s]Finetune:  79%|███████▉  | 79/100 [00:11<00:03,  6.55it/s]  Train Epoch 80: Rec Loss = 8.529920, Contrast Loss = 7.256500, Cluster Loss = 0.000000
+Finetune:  80%|████████  | 80/100 [00:11<00:02,  6.79it/s]Finetune:  81%|████████  | 81/100 [00:11<00:02,  7.22it/s]Finetune:  82%|████████▏ | 82/100 [00:12<00:02,  6.96it/s]Finetune:  83%|████████▎ | 83/100 [00:12<00:02,  6.65it/s]Finetune:  84%|████████▍ | 84/100 [00:12<00:02,  6.47it/s]Finetune:  85%|████████▌ | 85/100 [00:12<00:02,  6.50it/s]Finetune:  86%|████████▌ | 86/100 [00:12<00:02,  6.25it/s]Finetune:  87%|████████▋ | 87/100 [00:12<00:02,  6.31it/s]Finetune:  88%|████████▊ | 88/100 [00:13<00:01,  6.38it/s]Finetune:  89%|████████▉ | 89/100 [00:13<00:01,  6.35it/s]  Train Epoch 90: Rec Loss = 8.505886, Contrast Loss = 7.210062, Cluster Loss = 0.000000
+Finetune:  90%|█████████ | 90/100 [00:13<00:01,  6.36it/s]Finetune:  91%|█████████ | 91/100 [00:13<00:01,  6.50it/s]Finetune:  92%|█████████▏| 92/100 [00:13<00:01,  6.63it/s]Finetune:  93%|█████████▎| 93/100 [00:13<00:01,  6.84it/s]Finetune:  94%|█████████▍| 94/100 [00:13<00:00,  7.22it/s]Finetune:  95%|█████████▌| 95/100 [00:14<00:00,  7.14it/s]Finetune:  96%|█████████▌| 96/100 [00:14<00:00,  7.01it/s]Finetune:  97%|█████████▋| 97/100 [00:14<00:00,  7.42it/s]Finetune:  98%|█████████▊| 98/100 [00:14<00:00,  7.48it/s]Finetune:  99%|█████████▉| 99/100 [00:14<00:00,  7.52it/s]  Train Epoch 100: Rec Loss = 8.486315, Contrast Loss = 7.172557, Cluster Loss = 0.000000
+
+  Finetune Epoch 100:
+    Total Loss   = 8.4863
+    Rec Loss     = 9.8001
+    Contrast Loss= 7.1726
+    Gate: spatial=0.527±0.121, expr=0.473±0.121
+Finetune: 100%|██████████| 100/100 [00:14<00:00,  6.97it/s]Finetune: 100%|██████████| 100/100 [00:14<00:00,  6.78it/s]
+
+✓ Finetune finished (max epochs reached)
+  [Gate Stats] spatial=0.527±0.121, expr=0.473±0.121
+fitting ...
+  |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%

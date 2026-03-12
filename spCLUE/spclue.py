@@ -24,7 +24,7 @@ class spCLUE_TwoStage:
         weight_decay=5e-4,
         dim_input=200,
         dim_hidden=64,
-        dim_embed=24,
+        dim_embed=64,
         graph_corr=0.4,
         dropout=0.5,
         gamma=1.0,
@@ -85,17 +85,18 @@ class spCLUE_TwoStage:
             self.model.eval()
             
             # 前向传播 (finetune模式)
-            z1, z2, z_final, _, Gf_sparse, gate_weights = self.model(
-                self.input_data, self.g_spatial, self.g_expr,
-                stage='finetune', freeze_encoder=True,
-            )
-            # h1_proj, h2_proj, h_common_proj, z_final, x_rec, Gf_sparse, gate_weights = self.model(
+            # z1, z2, z_final, _, Gf_sparse, gate_weights = self.model(
             #     self.input_data, self.g_spatial, self.g_expr,
-            #     stage='finetune', freeze_encoder=True
+            #     stage='finetune', freeze_encoder=True,
             # )
+            h1_proj, h2_proj, h_common_proj, z_final, x_rec, Gf_sparse, gate_weights = self.model(
+                self.input_data, self.g_spatial, self.g_expr,
+                stage='finetune', freeze_encoder=True
+            )
             
             # 聚类
             predLabel = self.model.getCluster(z_final)
+            
             
             # 转为numpy
             features_fuse = z_final.detach().cpu().numpy()
@@ -176,47 +177,48 @@ class spCLUE_TwoStage:
             optimizer.zero_grad()
             
             # 前向传播 (finetune模式)
-            z1, z2, z_final, x_rec, Gf_sparse, _ = self.model(
-                self.input_data, self.g_spatial, self.g_expr, 
-                stage='finetune', freeze_encoder=self.freeze_encoder
-            )
-            # h1_proj, h2_proj, h_common_proj, z_final, x_rec, Gf_sparse, gate_weights= self.model(
+            # z1, z2, z_final, x_rec, Gf_sparse, _ = self.model(
             #     self.input_data, self.g_spatial, self.g_expr, 
             #     stage='finetune', freeze_encoder=self.freeze_encoder
             # )
+            h1_proj, h2_proj, h_common_proj, z_final, x_rec, Gf_sparse, gate_weights= self.model(
+                self.input_data, self.g_spatial, self.g_expr, 
+                stage='finetune', freeze_encoder=self.freeze_encoder
+            )
             
             # === 计算损失 ===
             # 1. 重构损失
             loss_rec = self.rec_crit(x_rec, self.input_data)
             
             # 2. 结构引导对比损失
-            loss_contrast1 = self.contrast_crit(z1, z_final, Gf_sparse)
-            loss_contrast2 = self.contrast_crit(z2, z_final, Gf_sparse)
+            loss_contrast1 = self.contrast_crit(h1_proj, h_common_proj, Gf_sparse)
+            loss_contrast2 = self.contrast_crit(h2_proj, h_common_proj, Gf_sparse)
             loss_contrast = (loss_contrast1 + loss_contrast2) / 2
             
             # 3. 聚类损失 (保留代码但权重=0)
             if self.beta > 0:
-                label1 = self.model.projectClsHead(z1)
-                label2 = self.model.projectClsHead(z2)
+                label1 = self.model.projectClsHead(h1_proj)
+                label2 = self.model.projectClsHead(h2_proj)
                 loss_cluster = self.cluster_crit(label1, label2)
             else:
                 loss_cluster = 0.0
             
             # 总损失
-            loss = self.gamma * loss_rec + self.kappa * loss_contrast + self.beta * loss_cluster
+            loss = self.gamma * loss_rec + self.kappa * loss_contrast + self.beta * loss_cluster 
             
             loss.backward()
             optimizer.step()
 
             if (epoch + 1) % 10 == 0:
-                print(f"  Train Epoch {epoch+1}: Rec Loss = {loss.item():.6f}, Contrast Loss = {loss_contrast.item():.6f}, Cluster Loss = {loss_cluster if isinstance(loss_cluster, float) else loss_cluster.item():.6f}")
+                print(f"  Train Epoch {epoch+1}: Loss = {loss.item():.6f},Rec Loss = {loss_rec.item():.6f}, Contrast Loss = {loss_contrast.item():.6f},  Cluster Loss = {loss_cluster if isinstance(loss_cluster, float) else loss_cluster.item():.6f}")
             
             # === 定期评估 (每100轮) ===
             if (epoch + 1) % 100 == 0:
                 print(f"\n  Finetune Epoch {epoch+1}:")
                 print(f"    Total Loss   = {loss.item():.4f}")
                 print(f"    Rec Loss     = {loss_rec.item():.4f}")
-                print(f"    Contrast Loss= {loss_contrast.item():.4f}")
+                print(f"    Contrast Loss = {loss_contrast.item():.4f}")
+            
                 
                 # 如果有聚类损失,检查视图一致性
                 if self.beta > 0:
