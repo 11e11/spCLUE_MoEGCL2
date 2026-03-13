@@ -29,9 +29,11 @@ class spCLUE_TwoStage:
         dropout=0.5,
         gamma=1.0,
         beta=0.0,
+        theta=5.0,
         kappa=1.0,
         gate_hidden_dim=128,
         gate_dropout=0.1,
+        gate_bias=5.0,
         freeze_encoder=True,
         residual_weight=0.2
     ):
@@ -44,7 +46,10 @@ class spCLUE_TwoStage:
         self.random_seed = random_seed
         self.gamma = gamma
         self.beta = beta
+        self.theta = theta
         self.kappa = kappa
+        self.gate_bias = gate_bias
+        self.gate_dropout = gate_dropout
         self.dims_list = [dim_input, dim_hidden, dim_embed]
         self.n_spot = input_data.shape[0]
         self.freeze_encoder = freeze_encoder
@@ -60,7 +65,7 @@ class spCLUE_TwoStage:
         # 模型
         self.model = CCGCN_TwoStage(
             self.dims_list, self.n_clusters, graph_corr, dropout,
-            gate_hidden_dim, gate_dropout, self.residual_weight
+            gate_hidden_dim, gate_dropout,gate_bias, self.residual_weight
         ).to(self.device)
         
         # 损失函数
@@ -207,7 +212,7 @@ class spCLUE_TwoStage:
                 loss_cluster = 0.0
             
             # 总损失
-            loss = self.gamma * loss_rec + self.kappa * loss_contrast + self.beta * loss_cluster + 5.0*loss_smooth
+            loss = self.gamma * loss_rec + self.kappa * loss_contrast + self.beta * loss_cluster + self.theta*loss_smooth
             
             loss.backward()
             optimizer.step()

@@ -6,8 +6,9 @@ import torch.nn.functional as F
 class MoEGraphGating(nn.Module):
     """MoE门控网络"""
     
-    def __init__(self, feature_dim, hidden_dim=128, dropout=0.1):
+    def __init__(self, feature_dim, hidden_dim=128, dropout=0.1,bias=5.0):
         super().__init__()
+        self.bias = bias
         
         self.gate_net = nn.Sequential(
             nn.Linear(feature_dim, hidden_dim),
@@ -27,7 +28,7 @@ class MoEGraphGating(nn.Module):
             gate_weights: [N, 2]
         """
         logits = self.gate_net(z_concat)
-        bias = torch.tensor([5.0, 0.0]).to(logits.device) 
+        bias = torch.tensor([self.bias, 0.0]).to(logits.device)
         gate_weights = F.softmax(logits * 8.0 + bias, dim=1)
         return gate_weights
 # class MoEGraphGating(nn.Module):
@@ -72,10 +73,11 @@ class AdaptiveMoEGraphFusion(nn.Module):
     自适应MoE图融合: 根据数据集大小选择密集或稀疏
     """
     
-    def __init__(self, feature_dim, hidden_dim=128, dropout=0.1, 
+    def __init__(self, feature_dim, hidden_dim=128, dropout=0.1, bias=5.0,
                  sparse_threshold=5000):
         super().__init__()
-        self.gating = MoEGraphGating(feature_dim, hidden_dim, dropout)
+        # self.bias = bias
+        self.gating = MoEGraphGating(feature_dim, hidden_dim, dropout,bias)
         self.sparse_threshold = sparse_threshold
     
     def forward(self, z_concat, G1, G2):
@@ -117,6 +119,7 @@ class AdaptiveMoEGraphFusion(nn.Module):
         A_list = torch.stack([G1_dense, G2_dense], dim=2)  # [N, N, 2]
         weights = gate_weights.unsqueeze(1)  # [N, 1, 2]
         Gf = torch.sum(A_list * weights, dim=2)  # [N, N]
+        # Gf = G1_dense
         # Gf = gate_weights[:, 0:1].unsqueeze(1) * G1 + gate_weights[:, 1:2].unsqueeze(1) * G2
         # Gf = 0.3 * G1_dense + 0.7 * G2_dense
         # 变成对称图

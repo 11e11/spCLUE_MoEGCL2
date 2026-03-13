@@ -14,7 +14,7 @@ class CCGCN_TwoStage(nn.Module):
     """
     
     def __init__(self, dims_list, n_clusters, graph_corr=0.4, dropout=0.5,
-                 gate_hidden_dim=128, gate_dropout=0.1, use_residual=True, residual_weight=0.2):
+                 gate_hidden_dim=128, gate_dropout=0.1, gate_bias=5.0, use_residual=True, residual_weight=0.2):
         super().__init__()
         self.input_dim = dims_list[0]
         self.hidden_dim = dims_list[1]
@@ -22,6 +22,8 @@ class CCGCN_TwoStage(nn.Module):
         self.dropout = dropout
         self.n_clusters = n_clusters
         self.graph_corr = graph_corr
+        self.gate_bias = gate_bias
+        self.gate_dropout = gate_dropout
         self.use_residual = use_residual
         self.residual_weight = residual_weight
         
@@ -49,7 +51,7 @@ class CCGCN_TwoStage(nn.Module):
         
         # === 训练阶段组件 ===
         self.moe_graph_fusion = AdaptiveMoEGraphFusion(
-            self.hidden_dim * 2, gate_hidden_dim, gate_dropout
+            self.hidden_dim * 2, gate_hidden_dim, gate_dropout, gate_bias
         )
         # === 关键修改1: 视图特定投影头 (用于对比学习) ===
         self.view_projection = nn.Sequential(
