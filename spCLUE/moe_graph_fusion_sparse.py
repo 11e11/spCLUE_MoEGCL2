@@ -17,7 +17,6 @@ class MoEGraphGating(nn.Module):
             nn.LeakyReLU(),
             nn.Dropout(dropout),
             nn.Linear(64, 2),
-            nn.Softmax(dim=1)
         )
     
     def forward(self, z_concat):
@@ -27,7 +26,10 @@ class MoEGraphGating(nn.Module):
         Returns:
             gate_weights: [N, 2]
         """
-        return self.gate_net(z_concat)
+        logits = self.gate_net(z_concat)
+        bias = torch.tensor([5.0, 0.0]).to(logits.device) 
+        gate_weights = F.softmax(logits * 8.0 + bias, dim=1)
+        return gate_weights
 # class MoEGraphGating(nn.Module):
 #     def __init__(self, feature_dim,
 #                 hidden_dim=128, dropout_rate=0.1):
@@ -87,8 +89,9 @@ class AdaptiveMoEGraphFusion(nn.Module):
             gate_weights: [N, 2]
         """
         N = z_concat.size(0)
-        # z_concat = F.layer_norm(z_concat, z_concat.size()[1:])   # LayerNorm有助于稳定训练
+        z_concat = F.layer_norm(z_concat, z_concat.size()[1:])   # LayerNorm有助于稳定训练
         gate_weights = self.gating(z_concat)
+        gate_weights = 0.7 * gate_weights + 0.3 * torch.spmm(G1, gate_weights)  # [N, 2]
         
         # 根据数据规模选择策略
         if N < self.sparse_threshold:
@@ -114,6 +117,13 @@ class AdaptiveMoEGraphFusion(nn.Module):
         A_list = torch.stack([G1_dense, G2_dense], dim=2)  # [N, N, 2]
         weights = gate_weights.unsqueeze(1)  # [N, 1, 2]
         Gf = torch.sum(A_list * weights, dim=2)  # [N, N]
+        # Gf = gate_weights[:, 0:1].unsqueeze(1) * G1 + gate_weights[:, 1:2].unsqueeze(1) * G2
+        # Gf = 0.3 * G1_dense + 0.7 * G2_dense
+        # 变成对称图
+        # Gf = (Gf + Gf.T) / 2
+
+        # 归一化处理
+        # Gf = self._normalize_adj(Gf)
         
         return Gf, gate_weights
     
@@ -146,3 +156,53 @@ class AdaptiveMoEGraphFusion(nn.Module):
         ).coalesce()
         
         return Gf_sparse, gate_weights
+    def _normalize_adj(self, adj):
+        if adj.is_sparse:
+            # 稀疏版归一化
+            adj_dense = adj.to_dense()
+        else:
+            adj_dense = adj
+        
+        # 计算度矩阵 D = sum(adj, dim=1)
+        D = torch.sum(adj_dense, dim=1) + 1e-8  # 加小值避免除0
+        D_sqrt_inv = 1.0 / torch.sqrt(D)
+        D_sqrt_inv = torch.diag(D_sqrt_inv)
+        
+        # 对称归一化：D^-1/2 * adj * D^-1/2
+        # adj_norm = torch.matmul(torch.matmul(D_sqrt_inv, adj_dense), D_sqrt_inv)
+        adj_norm = torch.matmul(torch.matmul(D_sqrt_inv, adj_dense), D_sqrt_inv)
+        
+        if adj.is_sparse:
+            # 转回稀疏版
+            adj_norm_sparse = adj_norm.to_sparse_coo()
+            return adj_norm_sparse
+        else:
+            return adj_norm
+    # def _normalize_adj(self, adj):
+    #     # 随机游走归一化
+    #     if adj.is_sparse:
+    #         # 稀疏版：先转稠密计算度（小图），大图可优化为稀疏求和
+    #         adj_dense = adj.to_dense()
+    #     else:
+    #         adj_dense = adj
+        
+    #     # ========== 关键修改1：计算随机游走归一化的度矩阵 ==========
+    #     # D = 每行的和（节点的度），加1e-8避免除0
+    #     D = torch.sum(adj_dense, dim=1) + 1e-8  
+    #     # 随机游走归一化：仅取D的逆，不做平方根
+    #     D_inv = 1.0 / D  # [N,] 一维向量
+    #     D_inv = torch.diag(D_inv)  # 转为对角矩阵 [N,N]
+        
+    #     # ========== 关键修改2：随机游走归一化计算（仅行归一化） ==========
+    #     # 公式：A_rw = D^-1 * A （左乘D_inv，仅行归一化）
+    #     adj_norm = torch.matmul(D_inv, adj_dense)
+        
+    #     # ========== 保留稀疏格式返回 ==========
+    #     if adj.is_sparse:
+    #         # 转回稀疏COO格式，保持与输入一致的存储方式
+    #         adj_norm_sparse = adj_norm.to_sparse_coo()
+    #         # 合并重复边（稀疏矩阵必备）
+    #         adj_norm_sparse = adj_norm_sparse.coalesce()
+    #         return adj_norm_sparse
+    #     else:
+    #         return adj_norm

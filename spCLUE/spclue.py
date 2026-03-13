@@ -101,6 +101,7 @@ class spCLUE_TwoStage:
             # 转为numpy
             features_fuse = z_final.detach().cpu().numpy()
             predLabel = predLabel.detach().cpu().numpy()
+            gate_weights = gate_weights.detach().cpu().numpy()
             
             # 打印门控统计 (调试用)
             stats = self.model.gate_stats
@@ -108,7 +109,7 @@ class spCLUE_TwoStage:
                 print(f"  [Gate Stats] spatial={stats['spatial_mean']:.3f}±{stats['spatial_std']:.3f}, "
                       f"expr={stats['expr_mean']:.3f}±{stats['expr_std']:.3f}")
         
-        return predLabel, features_fuse
+        return predLabel, features_fuse, gate_weights
     
     def pretrain(self):
         """阶段1: 预训练共享编码器"""
@@ -189,6 +190,8 @@ class spCLUE_TwoStage:
             # === 计算损失 ===
             # 1. 重构损失
             loss_rec = self.rec_crit(x_rec, self.input_data)
+
+            loss_smooth = torch.mean(torch.norm(z_final - torch.spmm(self.g_spatial, z_final),p=2,dim=1))
             
             # 2. 结构引导对比损失
             loss_contrast1 = self.contrast_crit(h1_proj, h_common_proj, Gf_sparse)
@@ -204,13 +207,13 @@ class spCLUE_TwoStage:
                 loss_cluster = 0.0
             
             # 总损失
-            loss = self.gamma * loss_rec + self.kappa * loss_contrast + self.beta * loss_cluster 
+            loss = self.gamma * loss_rec + self.kappa * loss_contrast + self.beta * loss_cluster + 5.0*loss_smooth
             
             loss.backward()
             optimizer.step()
 
             if (epoch + 1) % 10 == 0:
-                print(f"  Train Epoch {epoch+1}: Loss = {loss.item():.6f},Rec Loss = {loss_rec.item():.6f}, Contrast Loss = {loss_contrast.item():.6f},  Cluster Loss = {loss_cluster if isinstance(loss_cluster, float) else loss_cluster.item():.6f}")
+                print(f"  Train Epoch {epoch+1}: Loss = {loss.item():.6f},Rec Loss = {loss_rec.item():.6f}, Contrast Loss = {loss_contrast.item():.6f},  Cluster Loss = {loss_cluster if isinstance(loss_cluster, float) else loss_cluster.item():.6f}, Smooth Loss = {loss_smooth.item():.6f}")
             
             # === 定期评估 (每100轮) ===
             if (epoch + 1) % 100 == 0:
@@ -218,7 +221,7 @@ class spCLUE_TwoStage:
                 print(f"    Total Loss   = {loss.item():.4f}")
                 print(f"    Rec Loss     = {loss_rec.item():.4f}")
                 print(f"    Contrast Loss = {loss_contrast.item():.4f}")
-            
+                print(f"    Smooth Loss = {loss_smooth.item():.4f}")
                 
                 # 如果有聚类损失,检查视图一致性
                 if self.beta > 0:
@@ -230,8 +233,8 @@ class spCLUE_TwoStage:
                     # === 早停机制 (关键!) ===
                     if cur_ari >= max_ari:
                         print(f"\n✓ Early stopping triggered! (ARI={cur_ari:.4f} >= {max_ari:.2f})")
-                        predLabel, features_fuse = self.updateResult()
-                        return predLabel, features_fuse
+                        predLabel, features_fuse, gate_weights = self.updateResult()
+                        return predLabel, features_fuse, gate_weights
                 
                 # 打印门控统计
                 self.model.eval()
@@ -246,8 +249,8 @@ class spCLUE_TwoStage:
         print("\n✓ Finetune finished (max epochs reached)")
         
         # 如果没有早停,返回最终结果
-        predLabel, features_fuse = self.updateResult()
-        return predLabel, features_fuse
+        predLabel, features_fuse, gate_weights = self.updateResult()
+        return predLabel, features_fuse, gate_weights
     
     def train(self):
         """
@@ -261,6 +264,6 @@ class spCLUE_TwoStage:
         self.pretrain()
         
         # 阶段2: 训练 (可能触发早停)
-        predLabel, features_fuse = self.finetune()
+        predLabel, features_fuse, gated_weights = self.finetune()
         
-        return predLabel, features_fuse
+        return predLabel, features_fuse, gated_weights

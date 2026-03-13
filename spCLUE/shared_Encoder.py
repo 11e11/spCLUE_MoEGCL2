@@ -30,7 +30,7 @@ class SharedGCNEncoder(nn.Module):
     两个视图共享权重,但可选视图特定归一化
     """
     
-    def __init__(self, input_dim, hidden_dim, dropout=0.5, view_specific_norm=True):
+    def __init__(self, input_dim, hidden_dim, dropout=0.5, view_specific_norm=False):
         super().__init__()
         # self.noiseLayer = NoiseLayer(dropout=dropout)
         self.transform = TransForm_W(input_dim, hidden_dim, dropout)
@@ -41,6 +41,8 @@ class SharedGCNEncoder(nn.Module):
         if view_specific_norm:
             self.bn_spatial = nn.BatchNorm1d(hidden_dim)
             self.bn_expr = nn.BatchNorm1d(hidden_dim)
+        else:
+            self.bn = nn.BatchNorm1d(hidden_dim)
     
     def forward(self, data, adj, view_type=None, graph_corr=0.4,dropout=0.1, training=True):
         """
@@ -68,6 +70,8 @@ class SharedGCNEncoder(nn.Module):
                 feature = self.bn_spatial(feature)
             elif view_type == 'expr':
                 feature = self.bn_expr(feature)
+        else:
+            feature = self.bn(feature)
         
         return feature
 

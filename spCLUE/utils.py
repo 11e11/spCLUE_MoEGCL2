@@ -32,8 +32,12 @@ def two_hop_propagation(Z_init, Gf_sparse, use_residual=True, residual_weight=0.
     Returns:
         Z_final: [N, D] 2-hop传播后的嵌入
     """
+    # 添加自环
+    N = Gf_sparse.size(0)
+    I = torch.eye(N).to(Gf_sparse.device)
+    Gf_tilde = Gf_sparse + I 
     # 第一次传播: Z_1hop = Gf @ Z_init
-    Z_1hop = torch.spmm(Gf_sparse, Z_init)
+    Z_1hop = torch.spmm(Gf_tilde, Z_init)
     
     # ��二次传播: Z_2hop = Gf @ Z_1hop = Gf^2 @ Z_init
     # Z_2hop = torch.spmm(Gf_sparse, Z_1hop)

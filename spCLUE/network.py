@@ -26,8 +26,14 @@ class CCGCN_TwoStage(nn.Module):
         self.residual_weight = residual_weight
         
         # === 预训练组件 ===
+        self.spatial_encoder = SharedGCNEncoder(
+            self.input_dim, self.hidden_dim, dropout, view_specific_norm=False
+        )
+        self.expr_encoder = SharedGCNEncoder(
+            self.input_dim, self.hidden_dim, dropout, view_specific_norm=False
+        )
         self.shared_encoder = SharedGCNEncoder(
-            self.input_dim, self.hidden_dim, dropout, view_specific_norm=True
+            self.input_dim, self.hidden_dim, dropout, view_specific_norm=False
         )
         
         # 简单的融合 (预训练阶段用)
@@ -85,8 +91,10 @@ class CCGCN_TwoStage(nn.Module):
             z_pretrain: 融合嵌入
         """
         # 在两个图上编码
-        z1 = self.shared_encoder(data, adj1, 'spatial', self.graph_corr,self.dropout, False)
-        z2 = self.shared_encoder(data, adj2, 'expr', self.graph_corr,self.dropout, False)
+        z1 = self.shared_encoder(data, adj1, 'spatial', self.graph_corr,self.dropout, True)
+        z2 = self.shared_encoder(data, adj2, 'expr', self.graph_corr,self.dropout, True)
+        # z1 = self.spatial_encoder(data, adj1, 'spatial', self.graph_corr,self.dropout, False)
+        # z2 = self.expr_encoder(data, adj2, 'expr', self.graph_corr,self.dropout, False)
         
         # 简单融合 (可选: 用Attention或直接Concat)
         z_concat = torch.cat([z1, z2], dim=1)
@@ -118,6 +126,8 @@ class CCGCN_TwoStage(nn.Module):
             with torch.no_grad():
                 z1 = self.shared_encoder(data, adj1, 'spatial', 0,0, False)  # no dropout
                 z2 = self.shared_encoder(data, adj2, 'expr', 0,0, False)
+                # z1 = self.spatial_encoder(data, adj1, 'spatial', self.graph_corr,self.dropout, False)
+                # z2 = self.expr_encoder(data, adj2, 'expr', self.graph_corr,self.dropout, False)
         else:
             # z1 = self.shared_encoder(data, adj1, 'spatial', self.graph_corr, False)
             # z2 = self.shared_encoder(data, adj2, 'expr', self.graph_corr, False)
@@ -134,6 +144,7 @@ class CCGCN_TwoStage(nn.Module):
         
         # === Step 2: 拼接Z1和Z2 ===
         z_concat = torch.cat([z1, z2], dim=1)  # [N, 2*hidden_dim]
+        # z_gate = torch.cat([z_concat, data], dim=1)  # [N, 2*hidden_dim + input_dim]
         
         # === Step 3: MoE图融合 ===
         Gf_sparse, gate_weights = self.moe_graph_fusion(z_concat, adj1, adj2)
