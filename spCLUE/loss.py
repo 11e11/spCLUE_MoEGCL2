@@ -72,111 +72,232 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import torch
+import torch.nn as nn
+
+
+import torch
+import torch.nn as nn
+
 class StructureGuidedContrastiveLoss(nn.Module):
-    def __init__(self, temperature=1.0, device='cuda'):
+    def __init__(self, temperature=1.0, device='cuda', chunk_size=1024): # 4090建议调大到1024
         super().__init__()
         self.temperature = temperature
-        self.device = device
+        self.chunk_size = chunk_size
 
-    def forward(self, h_view, h_common, Gf_dense):
-        """
-        优化后的显存友好版
-        """
+    def forward(self, h_view, h_common, Gf_sparse):
+        device = h_view.device
         N = h_view.size(0)
-        
-        # 1. 拼接特征并计算相似度矩阵 (2N x 2N)
-        # 这是避不开的 O(N^2)，但我们要尽量减少它的副本
-        h = torch.cat((h_view, h_common), dim=0)  # [2N, D]
-        sim = torch.matmul(h, h.T) / self.temperature  # [2N, 2N]
-        
-        # 2. 构造结构引导的惩罚 (Structural Penalty)
-        # 不要使用 repeat(2,2) 或 ones - S_1，那会创建巨大的新矩阵
-        # 直接利用 Gf_dense [N, N] 的四块拼接逻辑进行原地操作或掩码
-        
-        # 我们要排除：
-        # (a) 对角线 (self-similarity)
-        # (b) 正样本对 (h_view[i] vs h_common[i])
-        # (c) 图结构中的邻居 (Structural Neighbors)
-        
-        # 构造一个极小值掩码，将不需要作为负样本的位置设为 -1e9
-        # 这样在计算 Softmax (CrossEntropy) 时这些位置的贡献几乎为 0
-        mask_inf = torch.zeros(2 * N, 2 * N, device=self.device)
-        
-        # 处理 (c) 邻居节点：利用广播直接填充 4 个象限
-        # 假设 Gf_dense 中 1 表示邻居
-        neighbor_mask = Gf_dense > 0
-        mask_inf[:N, :N][neighbor_mask] = -1e9
-        mask_inf[N:, N:][neighbor_mask] = -1e9
-        mask_inf[:N, N:][neighbor_mask] = -1e9
-        mask_inf[N:, :N][neighbor_mask] = -1e9
-        
-        # 处理 (a) & (b) 对角线和正样本对
-        diag_mask = torch.eye(N, device=self.device).bool()
-        # 排除同视图对角线
-        mask_inf[:N, :N][diag_mask] = -1e9
-        mask_inf[N:, N:][diag_mask] = -1e9
-        # 排除跨视图正样本（这些我们要单独提取，不作为负样本）
-        mask_inf[:N, N:][diag_mask] = -1e9
-        mask_inf[N:, :N][diag_mask] = -1e9
-        
-        # 将掩码应用到相似度矩阵
-        sim_with_mask = sim + mask_inf
-        
-        # 3. 提取正样本 (2N, 1)
-        # sim[:N, N:] 的对角线是 h_view[i] vs h_common[i]
-        pos_i_j = torch.diag(sim[:N, N:]) 
-        pos_j_i = torch.diag(sim[N:, :N])
-        positives = torch.cat([pos_i_j, pos_j_i], dim=0).view(2 * N, 1)
-        
-        # 4. 提取负样本 (2N, 2N-2-neighbors)
-        # 关键优化：不再使用 sim[mask].reshape，因为那样会产生不规则形状，显存开销极大
-        # 我们改用 LogSumExp 的逻辑来手动计算 InfoNCE
-        
-        # 计算分母：sum(exp(pos) + sum(exp(neg)))
-        # 为了数值稳定，使用如下公式：
-        # Loss = -pos + log(sum(exp(all_sim_in_row)))
-        
-        logits_max, _ = torch.max(sim_with_mask, dim=1, keepdim=True)
-        # 减去最大值防止溢出
-        exp_sim = torch.exp(sim_with_mask - logits_max)
-        sum_exp_neg = exp_sim.sum(dim=1, keepdim=True)
-        
-        # 加上正样本的 exp
-        exp_pos = torch.exp(positives - logits_max)
-        
-        # InfoNCE = -log( exp(pos) / (exp(pos) + sum(exp(neg))) )
-        loss = - (positives - logits_max) + torch.log(exp_pos + sum_exp_neg)
-        
-        return loss.mean()
-        # h = torch.cat((h_view, h_common), dim=0)
-        # sim = torch.matmul(h, h.T) / self.temperature
 
-        # exp_sim = torch.exp(sim)
+        # 特征归一化（对比学习标准操作，防止点积数值过大）
+        h = torch.cat([h_view, h_common], dim=0) 
+        h = torch.nn.functional.normalize(h, dim=1)
 
-        # pos_mask = torch.zeros(2*N, 2*N, device=self.device)
+        # 提取图邻居（预处理索引，加速查找）
+        if Gf_sparse.is_sparse:
+            Gf_sparse = Gf_sparse.coalesce()
+            row, col = Gf_sparse.indices()
+        else:
+            row, col = torch.nonzero(Gf_sparse > 0, as_tuple=True)
 
-        # diag = torch.eye(N, device=self.device).bool()
-        # pos_mask[:N, N:][diag] = 1
-        # pos_mask[N:, :N][diag] = 1
+        loss_sum = 0.0
+        
+        for start in range(0, 2 * N, self.chunk_size):
+            end = min(start + self.chunk_size, 2 * N)
+            rows_global = torch.arange(start, end, device=device)
+            h_chunk = h[start:end]
 
-        # neighbor_mask = (Gf_dense > 0)
+            # 1. 计算相似度 (chunk, 2N)
+            sim = torch.matmul(h_chunk, h.T) / self.temperature
+            
+            # 2. 准备掩码
+            mask = torch.zeros_like(sim, dtype=torch.bool)
+            
+            # self mask & positive mask
+            pos_idx = rows_global.clone()
+            pos_idx[rows_global < N] += N
+            pos_idx[rows_global >= N] -= N
+            
+            mask[torch.arange(end - start), rows_global] = True
+            mask[torch.arange(end - start), pos_idx] = True
 
-        # pos_mask[:N, :N][neighbor_mask] = 1
-        # pos_mask[N:, N:][neighbor_mask] = 1
-        # pos_mask[:N, N:][neighbor_mask] = 1
-        # pos_mask[N:, :N][neighbor_mask] = 1
+            # 3. 结构邻居 mask (优化版：避免线性扫描)
+            node_ids = rows_global % N
+            # 找出 row 中所有落在当前 chunk 范围内的 edges
+            # 这一步能大幅加速大规模数据的训练
+            relevant_edges = torch.isin(row, node_ids)
+            if relevant_edges.any():
+                r_sub = row[relevant_edges]
+                c_sub = col[relevant_edges]
+                
+                # 建立 node_id 到 chunk 内相对索引的映射
+                # 这种方式比 for 循环中执行 row == node 快得多
+                rel_map = torch.zeros(N, dtype=torch.long, device=device)
+                rel_map[node_ids] = torch.arange(end - start, device=device)
+                
+                rows_in_mask = rel_map[r_sub]
+                mask[rows_in_mask, c_sub] = True      # 遮蔽 View 1 邻居
+                mask[rows_in_mask, c_sub + N] = True  # 遮蔽 Common 邻居
 
-        # self_mask = torch.eye(2*N, device=self.device).bool()
-        # pos_mask[self_mask] = 0
+            # 4. 正样本相似度（单独提取）
+            pos_sim = torch.sum(h_chunk * h[pos_idx], dim=1) / self.temperature
 
-        # pos_sum = (exp_sim * pos_mask).sum(dim=1)
+            # 5. 计算带掩码的 LogSumExp
+            sim = sim.masked_fill(mask, float('-inf'))
+            logits_max = torch.max(sim, dim=1, keepdim=True)[0]
+            # 修正：如果一行全是邻居导致 max 是 -inf，设为 0
+            logits_max = torch.where(torch.isinf(logits_max), torch.zeros_like(logits_max), logits_max)
 
-        # den_mask = ~self_mask
-        # den_sum = (exp_sim * den_mask).sum(dim=1)
+            exp_sim_neg = torch.exp(sim - logits_max)
+            sum_exp_neg = exp_sim_neg.sum(dim=1)
+            
+            # 修正公式：正样本必须放回分母中以保持与原代码一致
+            exp_pos = torch.exp(pos_sim - logits_max.squeeze())
+            
+            # Loss = -log( exp(pos) / (exp(pos) + sum(exp(neg))) )
+            current_loss = -(pos_sim - logits_max.squeeze() - torch.log(exp_pos + sum_exp_neg + 1e-8))
 
-        # loss = -torch.log(pos_sum / den_sum)
+            loss_sum += current_loss.sum()
 
-        # return loss.mean()
+        return loss_sum / (2 * N)
+# class StructureGuidedContrastiveLoss(nn.Module):
+#     def __init__(self, temperature=1.0, device='cuda'):
+#         super().__init__()
+#         self.temperature = temperature
+#         self.device = device
+
+#     def forward(self, h_view, h_common, Gf_sparse):
+#         """
+#         显存友好且支持稀疏/稠密双后端的结构引导对比损失
+#         """
+#         N = h_view.size(0)
+        
+#         # 1. 计算相似度矩阵 (2N x 2N)
+#         h = torch.cat((h_view, h_common), dim=0) 
+#         sim = torch.matmul(h, h.T) / self.temperature 
+        
+#         # 2. 构造掩码矩阵
+#         mask_inf = torch.zeros(2 * N, 2 * N, device=self.device)
+        
+#         # --- 核心：提取结构邻居掩码 ---
+#         if Gf_sparse.is_sparse:
+#             Gf_sparse = Gf_sparse.coalesce()
+#             indices = Gf_sparse._indices()
+#             row, col = indices[0], indices[1]
+#             # 排除 4 个象限中的结构邻居
+#             mask_inf[:N, :N][row, col] = -1e9
+#             mask_inf[N:, N:][row, col] = -1e9
+#             mask_inf[:N, N:][row, col] = -1e9
+#             mask_inf[N:, :N][row, col] = -1e9
+#         else:
+#             neighbor_mask = Gf_sparse > 0
+#             mask_inf[:N, :N][neighbor_mask] = -1e9
+#             mask_inf[N:, N:][neighbor_mask] = -1e9
+#             mask_inf[:N, N:][neighbor_mask] = -1e9
+#             mask_inf[N:, :N][neighbor_mask] = -1e9
+            
+#         # --- 统一处理：对角线和正样本对 ---
+#         diag_indices = torch.arange(N, device=self.device)
+#         # 排除同视图自相似 (对角线)
+#         mask_inf[:N, :N][diag_indices, diag_indices] = -1e9
+#         mask_inf[N:, N:][diag_indices, diag_indices] = -1e9
+#         # 排除跨视图正样本对 (用于分母)
+#         mask_inf[:N, N:][diag_indices, diag_indices] = -1e9
+#         mask_inf[N:, :N][diag_indices, diag_indices] = -1e9
+        
+#         # 3. 计算 InfoNCE (共享逻辑)
+#         sim_with_mask = sim + mask_inf
+        
+#         # 提取正样本 (跨视图对角线)
+#         pos_i_j = torch.diag(sim[:N, N:]) 
+#         pos_j_i = torch.diag(sim[N:, :N])
+#         positives = torch.cat([pos_i_j, pos_j_i], dim=0).view(2 * N, 1)
+        
+#         # 数值稳定的 LogSumExp
+#         logits_max, _ = torch.max(sim_with_mask, dim=1, keepdim=True)
+#         exp_sim = torch.exp(sim_with_mask - logits_max)
+#         sum_exp_neg = exp_sim.sum(dim=1, keepdim=True)
+#         exp_pos = torch.exp(positives - logits_max)
+        
+#         loss = - (positives - logits_max) + torch.log(exp_pos + sum_exp_neg)
+        
+#         return loss.mean()
+# class StructureGuidedContrastiveLoss(nn.Module):
+#     def __init__(self, temperature=1.0, device='cuda'):
+#         super().__init__()
+#         self.temperature = temperature
+#         self.device = device
+
+#     def forward(self, h_view, h_common, Gf_dense):
+#         """
+#         优化后的显存友好版
+#         """
+#         N = h_view.size(0)
+        
+#         # 1. 拼接特征并计算相似度矩阵 (2N x 2N)
+#         # 这是避不开的 O(N^2)，但我们要尽量减少它的副本
+#         h = torch.cat((h_view, h_common), dim=0)  # [2N, D]
+#         sim = torch.matmul(h, h.T) / self.temperature  # [2N, 2N]
+        
+#         # 2. 构造结构引导的惩罚 (Structural Penalty)
+#         # 不要使用 repeat(2,2) 或 ones - S_1，那会创建巨大的新矩阵
+#         # 直接利用 Gf_dense [N, N] 的四块拼接逻辑进行原地操作或掩码
+        
+#         # 我们要排除：
+#         # (a) 对角线 (self-similarity)
+#         # (b) 正样本对 (h_view[i] vs h_common[i])
+#         # (c) 图结构中的邻居 (Structural Neighbors)
+        
+#         # 构造一个极小值掩码，将不需要作为负样本的位置设为 -1e9
+#         # 这样在计算 Softmax (CrossEntropy) 时这些位置的贡献几乎为 0
+#         mask_inf = torch.zeros(2 * N, 2 * N, device=self.device)
+        
+#         # 处理 (c) 邻居节点：利用广播直接填充 4 个象限
+#         # 假设 Gf_dense 中 1 表示邻居
+#         neighbor_mask = Gf_dense > 0
+#         mask_inf[:N, :N][neighbor_mask] = -1e9
+#         mask_inf[N:, N:][neighbor_mask] = -1e9
+#         mask_inf[:N, N:][neighbor_mask] = -1e9
+#         mask_inf[N:, :N][neighbor_mask] = -1e9
+        
+#         # 处理 (a) & (b) 对角线和正样本对
+#         diag_mask = torch.eye(N, device=self.device).bool()
+#         # 排除同视图对角线
+#         mask_inf[:N, :N][diag_mask] = -1e9
+#         mask_inf[N:, N:][diag_mask] = -1e9
+#         # 排除跨视图正样本（这些我们要单独提取，不作为负样本）
+#         mask_inf[:N, N:][diag_mask] = -1e9
+#         mask_inf[N:, :N][diag_mask] = -1e9
+        
+#         # 将掩码应用到相似度矩阵
+#         sim_with_mask = sim + mask_inf
+        
+#         # 3. 提取正样本 (2N, 1)
+#         # sim[:N, N:] 的对角线是 h_view[i] vs h_common[i]
+#         pos_i_j = torch.diag(sim[:N, N:]) 
+#         pos_j_i = torch.diag(sim[N:, :N])
+#         positives = torch.cat([pos_i_j, pos_j_i], dim=0).view(2 * N, 1)
+        
+#         # 4. 提取负样本 (2N, 2N-2-neighbors)
+#         # 关键优化：不再使用 sim[mask].reshape，因为那样会产生不规则形状，显存开销极大
+#         # 我们改用 LogSumExp 的逻辑来手动计算 InfoNCE
+        
+#         # 计算分母：sum(exp(pos) + sum(exp(neg)))
+#         # 为了数值稳定，使用如下公式：
+#         # Loss = -pos + log(sum(exp(all_sim_in_row)))
+        
+#         logits_max, _ = torch.max(sim_with_mask, dim=1, keepdim=True)
+#         # 减去最大值防止溢出
+#         exp_sim = torch.exp(sim_with_mask - logits_max)
+#         sum_exp_neg = exp_sim.sum(dim=1, keepdim=True)
+        
+#         # 加上正样本的 exp
+#         exp_pos = torch.exp(positives - logits_max)
+        
+#         # InfoNCE = -log( exp(pos) / (exp(pos) + sum(exp(neg))) )
+#         loss = - (positives - logits_max) + torch.log(exp_pos + sum_exp_neg)
+        
+#         return loss.mean()
 
 class ContrastiveLoss(nn.Module):
     def __init__(self, temperature=0.2) -> None:

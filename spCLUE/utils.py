@@ -32,10 +32,25 @@ def two_hop_propagation(Z_init, Gf_sparse, use_residual=True, residual_weight=0.
     Returns:
         Z_final: [N, D] 2-hop传播后的嵌入
     """
-    # 添加自环
+    device = Gf_sparse.device
     N = Gf_sparse.size(0)
-    I = torch.eye(N).to(Gf_sparse.device)
-    Gf_tilde = Gf_sparse + I 
+    # 添加自环
+    if not Gf_sparse.is_sparse:
+        # 稠密矩阵
+        
+        I = torch.eye(N).to(Gf_sparse.device)
+        Gf_tilde = Gf_sparse + I 
+    else:
+        # 稀疏矩阵
+        # 1. 创建稀疏单位矩阵 (只存储对角线索引)
+        indices = torch.arange(N, device=device).unsqueeze(0).repeat(2, 1)
+        values = torch.ones(N, device=device)
+        I_sparse = torch.sparse_coo_tensor(indices, values, (N, N))
+        
+        # 2. 稀疏 + 稀疏 加法 (这是支持的)
+        # 使用 coalesce() 合并重复的索引项（即原本就有值的对角线）
+        Gf_tilde = (Gf_sparse + I_sparse).coalesce()
+
     # 第一次传播: Z_1hop = Gf @ Z_init
     Z_1hop = torch.spmm(Gf_tilde, Z_init)
     

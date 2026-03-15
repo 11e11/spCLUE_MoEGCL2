@@ -121,25 +121,50 @@ from sklearn.utils import issparse
 
 
 
+# def preprocess(adata, hvgNumber=None):
+#     print("normalized data ---------------->")
+#     sc.pp.filter_genes(adata, min_counts=1)
+#     sc.pp.filter_cells(adata, min_counts=1)
+#     if issparse(adata.X):
+#         adata.layers['count'] = adata.X.copy() # 保持稀疏以节省内存
+#     else:
+#         adata.layers['count'] = adata.X.copy()
+#     if not hvgNumber is None:
+#         print(f"========== selecting HVG ============")
+#         sc.pp.highly_variable_genes(adata, flavor="seurat_v3", layer="count",n_top_genes=hvgNumber, subset=False)
+#         adata = adata[:, adata.var["highly_variable"] == True]
+#         sc.pp.scale(adata)
+#         return adata
+#     sc.pp.normalize_total(adata, target_sum=1e4)
+#     sc.pp.log1p(adata)
+#     sc.pp.scale(adata)
+#     return adata
+
+# for MOB
 def preprocess(adata, hvgNumber=None):
-    print("normalized data ---------------->")
+    print("Preprocessing data ---------------->")
     sc.pp.filter_genes(adata, min_counts=1)
     sc.pp.filter_cells(adata, min_counts=1)
-    if issparse(adata.X):
-        adata.layers['count'] = adata.X.copy() # 保持稀疏以节省内存
-    else:
-        adata.layers['count'] = adata.X.copy()
-    if not hvgNumber is None:
-        print(f"========== selecting HVG ============")
-        sc.pp.highly_variable_genes(adata, flavor="seurat_v3", layer="count",n_top_genes=hvgNumber, subset=False)
-        adata = adata[:, adata.var["highly_variable"] == True]
-        sc.pp.scale(adata)
-        return adata
+
+    
+    
+    # 1. 始终先进行归一化和对数转换，这对可视化和 Marker 表达至关重要
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
+    adata.raw = adata.copy()
+    
+    # 2. 备份 count 用于某些损失函数（如果需要）
+    adata.layers['count'] = adata.X.copy()
+    
+    # 3. 高变基因选择
+    if hvgNumber is not None:
+        print(f"========== Selecting {hvgNumber} HVGs ============")
+        # 使用 seurat_v3 建议配合 raw count，或者在 log1p 后直接使用 flavor='seurat'
+        sc.pp.highly_variable_genes(adata, n_top_genes=hvgNumber, subset=True)
+    
+    # 4. 最后 Scale
     sc.pp.scale(adata)
     return adata
-
 
 
 import numpy as np
