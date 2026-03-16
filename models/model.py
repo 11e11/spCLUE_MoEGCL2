@@ -8,7 +8,7 @@ from sklearn.metrics import adjusted_rand_score
 from .network import CCGCN_TwoStage
 
 
-class spCLUE_TwoStage:
+class model_TwoStage:
     """两阶段训练的spCLUE (修正版 - 包含updateResult)"""
     
     def __init__(
@@ -110,9 +110,9 @@ class spCLUE_TwoStage:
             
             # 打印门控统计 (调试用)
             stats = self.model.gate_stats
-            if stats:  # 如果有统计信息
-                print(f"  [Gate Stats] spatial={stats['spatial_mean']:.3f}±{stats['spatial_std']:.3f}, "
-                      f"expr={stats['expr_mean']:.3f}±{stats['expr_std']:.3f}")
+            # if stats:  # 如果有统计信息
+            #     print(f"  [Gate Stats] spatial={stats['spatial_mean']:.3f}±{stats['spatial_std']:.3f}, "
+            #           f"expr={stats['expr_mean']:.3f}±{stats['expr_std']:.3f}")
         
         return predLabel, features_fuse, gate_weights
     
@@ -175,7 +175,7 @@ class spCLUE_TwoStage:
         # 早停阈值 (根据数据集大小调整)
         max_ari = 0.3 if self.n_spot <= 10000 else 1.1
         
-        print(f"✓ Early stopping threshold: ARI >= {max_ari:.2f}\n")
+        # print(f"✓ Early stopping threshold: ARI >= {max_ari:.2f}\n")
         
         for epoch in tqdm(range(self.finetune_epochs), desc="Finetune"):
             self.model.train()
@@ -218,7 +218,7 @@ class spCLUE_TwoStage:
             optimizer.step()
 
             if (epoch + 1) % 10 == 0:
-                print(f"  Train Epoch {epoch+1}: Loss = {loss.item():.6f},Rec Loss = {loss_rec.item():.6f}, Contrast Loss = {loss_contrast.item():.6f},  Cluster Loss = {loss_cluster if isinstance(loss_cluster, float) else loss_cluster.item():.6f}, Smooth Loss = {loss_smooth.item():.6f}")
+                print(f"  Train Epoch {epoch+1}: Loss = {loss.item():.6f},Rec Loss = {loss_rec.item():.6f}, Contrast Loss = {loss_contrast.item():.6f}, Smooth Loss = {loss_smooth.item():.6f}")
             
             # === 定期评估 (每100轮) ===
             if (epoch + 1) % 100 == 0:
@@ -242,13 +242,13 @@ class spCLUE_TwoStage:
                         return predLabel, features_fuse, gate_weights
                 
                 # 打印门控统计
-                self.model.eval()
-                with torch.no_grad():
-                    self.model(self.input_data, self.g_spatial, self.g_expr, 
-                              stage='finetune', freeze_encoder=True)
-                    stats = self.model.gate_stats
-                    print(f"    Gate: spatial={stats['spatial_mean']:.3f}±{stats['spatial_std']:.3f}, "
-                          f"expr={stats['expr_mean']:.3f}±{stats['expr_std']:.3f}")
+                # self.model.eval()
+                # with torch.no_grad():
+                #     self.model(self.input_data, self.g_spatial, self.g_expr, 
+                #               stage='finetune', freeze_encoder=True)
+                #     stats = self.model.gate_stats
+                    # print(f"    Gate: spatial={stats['spatial_mean']:.3f}±{stats['spatial_std']:.3f}, "
+                    #       f"expr={stats['expr_mean']:.3f}±{stats['expr_std']:.3f}")
                 self.model.train()
         
         print("\n✓ Finetune finished (max epochs reached)")
