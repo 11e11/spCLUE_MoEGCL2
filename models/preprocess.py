@@ -244,12 +244,25 @@ def prepare_graph(adata, key="spatial", n_neighbors=8, n_comps=50,
         print("  -> 使用空间坐标 (euclidean)")
         
     else: # expr
-        print("  -> 使用 PCA 表达特征")
-        # 计算 PCA
-        if 'X_pca' in adata.obsm:
-             X_data = adata.obsm['X_pca'][:, :n_comps]
+        # print("  -> 使用 PCA 表达特征")
+        # # 计算 PCA
+        # if 'X_pca' in adata.obsm:
+        #      X_data = adata.obsm['X_pca'][:, :n_comps]
+        # else:
+        #     X_data = PCA(n_components=n_comps, random_state=0, svd_solver=svd_solver).fit_transform(adata.X)
+        # --- 修改部分开始 ---
+        if n_comps is not None and n_comps > 0:
+            print(f"  -> 使用 PCA 降维特征 ")
+            if 'X_pca' in adata.obsm:
+                 X_data = adata.obsm['X_pca']
+            else:
+                from sklearn.decomposition import PCA
+                X_data = PCA(n_components=n_comps, random_state=0).fit_transform(adata.X)
         else:
-            X_data = PCA(n_components=n_comps, random_state=0, svd_solver=svd_solver).fit_transform(adata.X)
+            print("  -> 跳过 PCA，直接使用原始表达量数据")
+            # 如果 adata.X 是稀疏矩阵，需要转为稠密数组，因为 KNN 搜索在稠密矩阵上更快
+            import scipy.sparse
+            X_data = adata.X.toarray() if scipy.sparse.issparse(adata.X) else adata.X
         
         # 处理度量标准
         if metric == "cosine":
