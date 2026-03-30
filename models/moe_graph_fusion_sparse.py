@@ -181,31 +181,3 @@ class AdaptiveMoEGraphFusion(nn.Module):
             return adj_norm_sparse
         else:
             return adj_norm
-    # def _normalize_adj(self, adj):
-    #     # 随机游走归一化
-    #     if adj.is_sparse:
-    #         # 稀疏版：先转稠密计算度（小图），大图可优化为稀疏求和
-    #         adj_dense = adj.to_dense()
-    #     else:
-    #         adj_dense = adj
-        
-    #     # ========== 关键修改1：计算随机游走归一化的度矩阵 ==========
-    #     # D = 每行的和（节点的度），加1e-8避免除0
-    #     D = torch.sum(adj_dense, dim=1) + 1e-8  
-    #     # 随机游走归一化：仅取D的逆，不做平方根
-    #     D_inv = 1.0 / D  # [N,] 一维向量
-    #     D_inv = torch.diag(D_inv)  # 转为对角矩阵 [N,N]
-        
-    #     # ========== 关键修改2：随机游走归一化计算（仅行归一化） ==========
-    #     # 公式：A_rw = D^-1 * A （左乘D_inv，仅行归一化）
-    #     adj_norm = torch.matmul(D_inv, adj_dense)
-        
-    #     # ========== 保留稀疏格式返回 ==========
-    #     if adj.is_sparse:
-    #         # 转回稀疏COO格式，保持与输入一致的存储方式
-    #         adj_norm_sparse = adj_norm.to_sparse_coo()
-    #         # 合并重复边（稀疏矩阵必备）
-    #         adj_norm_sparse = adj_norm_sparse.coalesce()
-    #         return adj_norm_sparse
-    #     else:
-    #         return adj_norm

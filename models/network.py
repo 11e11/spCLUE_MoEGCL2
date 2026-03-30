@@ -135,7 +135,7 @@ class CCGCN_TwoStage(nn.Module):
             # z2 = self.shared_encoder(data, adj2, 'expr', self.graph_corr, self.dropout, False)
             # MOBV2之前采用的都是如下
             z1 = self.shared_encoder(data, adj1, 'spatial', 0,0.1, False)  
-            z2 = self.shared_encoder(data, adj2, 'expr', 0,0.1, False)
+            z2 = self.shared_encoder(data, adj2, 'expr', 0,0.1, False) 
 
         
         # 1. 投影单视图特征
