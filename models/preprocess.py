@@ -254,7 +254,7 @@ def prepare_graph(adata, key="spatial", n_neighbors=8, n_comps=50,
         if n_comps is not None and n_comps > 0:
             print(f"  -> 使用 PCA 降维特征 ")
             if 'X_pca' in adata.obsm:
-                 X_data = adata.obsm['X_pca'][:, :n_comps]
+                 X_data = adata.obsm['X_pca']
             else:
                 from sklearn.decomposition import PCA
                 X_data = PCA(n_components=n_comps, random_state=0).fit_transform(adata.X)
